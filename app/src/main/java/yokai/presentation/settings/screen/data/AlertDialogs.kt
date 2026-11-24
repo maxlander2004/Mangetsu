@@ -25,6 +25,8 @@ import yokai.i18n.MR
 import yokai.presentation.component.LabeledCheckbox
 import android.R as AR
 
+private const val MAX_LISTED_UNMATCHED = 25
+
 suspend fun DialogHostState.awaitRestoreBackup(
     context: Context,
     uri: Uri,
@@ -39,6 +41,19 @@ suspend fun DialogHostState.awaitRestoreBackup(
                     "\n",
                 ) { "- $it" }
             }"
+        }
+        if (results.unmatchedEntries.isNotEmpty()) {
+            message += "\n\n${stringResource(MR.strings.restore_unmatched_entries)}\n${
+                results.unmatchedEntries.take(MAX_LISTED_UNMATCHED).joinToString(
+                    "\n",
+                ) { "- $it" }
+            }"
+            if (results.unmatchedEntries.size > MAX_LISTED_UNMATCHED) {
+                message += "\n" + stringResource(
+                    MR.strings.restore_unmatched_entries_more,
+                    results.unmatchedEntries.size - MAX_LISTED_UNMATCHED,
+                )
+            }
         }
         if (results.missingTrackers.isNotEmpty()) {
             message += "\n\n${stringResource(MR.strings.restore_missing_trackers)}\n${

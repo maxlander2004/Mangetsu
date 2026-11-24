@@ -158,6 +158,8 @@ class PreferencesHelper(val context: Context, val preferenceStore: PreferenceSto
 
     fun preloadSize() = preferenceStore.getInt(Keys.preloadSize, 6)
 
+    fun dataSaver() = preferenceStore.getBoolean(Keys.dataSaver, false)
+
     fun autoUpdateTrack() = preferenceStore.getBoolean(Keys.autoUpdateTrack, true)
 
     fun trackMarkedAsRead() = preferenceStore.getBoolean(Keys.trackMarkedAsRead, false)

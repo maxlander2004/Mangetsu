@@ -134,13 +134,14 @@ object SettingsDataScreen : ComposableSettings() {
         ) {
             if (it == null) return@rememberLauncherForActivityResult
 
-            val results = try {
-                Pair(BackupFileValidator().validate(context, it), null)
-            } catch (e: Exception) {
-                Pair(null, e)
-            }
+            // Reading and converting a backup can be slow with a large Kotatsu archive.
+            scope.launchNonCancellableIO {
+                val results = try {
+                    Pair(BackupFileValidator().validate(context, it), null)
+                } catch (e: Exception) {
+                    Pair(null, e)
+                }
 
-            scope.launch {
                 alertDialog.awaitRestoreBackup(
                     context = context,
                     uri = it,

@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.protobuf.ProtoNumber
 
 @Serializable
@@ -16,6 +17,18 @@ data class Backup(
     @ProtoNumber(104) var backupPreferences: List<BackupPreference> = emptyList(),
     @ProtoNumber(105) var backupSourcePreferences: List<BackupSourcePreferences> = emptyList(),
 ) {
+
+    /**
+     * Issues found while converting a backup from another app, reported in the restore log.
+     */
+    @Transient
+    var warnings: List<String> = emptyList()
+
+    /**
+     * Library entries of a converted backup that could not be matched to a source here.
+     */
+    @Transient
+    var unmatchedEntries: List<String> = emptyList()
 
     companion object {
         val filenameRegex = """(${BuildConfig.APPLICATION_ID}|tachiyomi)?_\d+-\d+-\d+_\d+-\d+\.(tachibk|proto\.gz)""".toRegex()

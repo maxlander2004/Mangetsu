@@ -42,7 +42,9 @@ class HttpPageLoader(
      */
     private val queue = PriorityBlockingQueue<PriorityPage>()
 
+    // Data saver keeps a single page of look-ahead at most, which is what the page transition needs.
     private val preloadSize = preferences.preloadSize().get()
+        .let { if (preferences.dataSaver().get()) it.coerceAtMost(1) else it }
 
     init {
         scope.launchIO {

@@ -768,6 +768,27 @@ object ImageUtil {
     }
 
     /**
+     * Decodes an image at a reduced sample size when its longest side is larger than
+     * [maxDimension], so large pages and background copies don't exhaust the heap.
+     */
+    fun decodeSampledBitmap(source: BufferedSource, maxDimension: Int): Bitmap {
+        val longest = extractImageOptions(source).let { maxOf(it.outWidth, it.outHeight) }
+        check(longest > 0) { "Unable to read the image bounds" }
+
+        var sampleSize = 1
+        while (longest / (sampleSize * 2) >= maxDimension) {
+            sampleSize *= 2
+        }
+
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+            inPreferredConfig = Bitmap.Config.ARGB_8888
+        }
+        return BitmapFactory.decodeStream(source.peek().inputStream(), null, options)
+            ?: error("Unable to decode the image")
+    }
+
+    /**
      * Used to check an image's dimensions without loading it in the memory.
      */
     private fun extractImageOptions(imageSource: BufferedSource): BitmapFactory.Options {

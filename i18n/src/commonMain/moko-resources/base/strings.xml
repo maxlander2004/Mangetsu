@@ -782,6 +782,10 @@
     <string name="restore_missing_sources">Missing sources:</string>
     <string name="restore_missing_trackers">Trackers not logged into:</string>
     <string name="restore_content_full">Data from the backup file will be restored.\n\nYou will need to install any missing extensions and log in to tracking services afterwards to use them.</string>
+    <string name="restore_unmatched_entries">Not imported, no matching source here:</string>
+    <string name="restore_unmatched_entries_more">…and %d more, they will be listed in the restore log.</string>
+    <string name="data_saver">Save mobile data</string>
+    <string name="data_saver_summary">Preload a single page while reading</string>
     <string name="restoring_backup_canceled">Canceled restore</string>
     <string name="backup_restore_invalid_uri">Error: empty URI</string>
     <string name="creating_backup">Creating backup</string>

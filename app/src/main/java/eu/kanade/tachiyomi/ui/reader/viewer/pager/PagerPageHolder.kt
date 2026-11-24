@@ -53,6 +53,12 @@ import okio.Buffer
 import okio.BufferedSource
 import uy.kohesive.injekt.injectLazy
 
+// A page is decoded at most this large before it is merged or split.
+private const val MAX_SPLIT_DECODE_SIZE = 4096
+
+// The background colour only needs a thumbnail-sized copy of the page.
+private const val BACKGROUND_SAMPLE_SIZE = 512
+
 /**
  * View of the ViewPager that contains a page of a chapter.
  */
@@ -478,7 +484,7 @@ class PagerPageHolder(
                         else {
                             val background =
                                 try {
-                                    setBG(source.peek().inputStream())
+                                    setBG(source.peek())
                                 } catch (e: Exception) {
                                     Logger.e(e) { e.localizedMessage?.toString() ?: "" }
                                     ColorDrawable(Color.WHITE)
@@ -533,11 +539,15 @@ class PagerPageHolder(
             debugMode = viewer.config.debugMode,
         )
 
-    private suspend fun setBG(stream: InputStream): Drawable {
+    private suspend fun setBG(source: BufferedSource): Drawable {
         return withContext(Default) {
             val preferences by injectLazy<PreferencesHelper>()
+            // Only a small copy is needed to pick the background colour.
+            val bitmap = runCatching {
+                ImageUtil.decodeSampledBitmap(source, BACKGROUND_SAMPLE_SIZE)
+            }.getOrNull()
             ImageUtil.autoSetBackground(
-                BitmapFactory.decodeStream(stream),
+                bitmap,
                 preferences.readerTheme().get() == 2,
                 context,
             )
@@ -609,7 +619,7 @@ class PagerPageHolder(
         // Try to split
         if (page.longPage == true && viewer.config.splitPages) {
             val imageBitmap = try {
-                BitmapFactory.decodeStream(imageSource.peek().inputStream())
+                ImageUtil.decodeSampledBitmap(imageSource, MAX_SPLIT_DECODE_SIZE)
             } catch (e: Exception) {
                 Logger.e { "Cannot split page ${e.message}" }
                 return imageSource
@@ -635,7 +645,7 @@ class PagerPageHolder(
             // Detect if page is wide enough to be split
             if (viewer.config.splitPages && page.longPage == null) {
                 val imageBitmap = try {
-                    BitmapFactory.decodeStream(imageSource.peek().inputStream())
+                    ImageUtil.decodeSampledBitmap(imageSource, MAX_SPLIT_DECODE_SIZE)
                 } catch (e: Exception) {
                     page.longPage = true
                     splitDoublePages()
@@ -682,7 +692,7 @@ class PagerPageHolder(
         if (page.fullPage == true) return supportHingeIfThere(imageSource)
 
         val imageBitmap = try {
-            BitmapFactory.decodeStream(imageSource.peek().inputStream())
+            ImageUtil.decodeSampledBitmap(imageSource, MAX_SPLIT_DECODE_SIZE)
         } catch (e: Exception) {
             closeSources(imageSource2)
             page.fullPage = true

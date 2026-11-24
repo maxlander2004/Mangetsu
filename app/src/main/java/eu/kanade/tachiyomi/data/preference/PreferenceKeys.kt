@@ -83,6 +83,10 @@ object PreferenceKeys {
 
     const val preloadSize = "preload_size"
 
+    const val dataSaver = "data_saver"
+
+    const val keiyoushiRepoSeeded = "keiyoushi_repo_seeded"
+
     const val webtoonSidePadding = "webtoon_side_padding"
 
     const val webtoonEnableZoomOut = "webtoon_enable_zoom_out"

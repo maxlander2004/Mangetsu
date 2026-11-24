@@ -43,8 +43,12 @@ class BackupFileValidator(
             .map { context.getString(it.nameRes()) }
             .sorted()
 
-        return Results(missingSources, missingTrackers)
+        return Results(missingSources, missingTrackers, backup.unmatchedEntries)
     }
 
-    data class Results(val missingSources: List<String>, val missingTrackers: List<String>)
+    data class Results(
+        val missingSources: List<String>,
+        val missingTrackers: List<String>,
+        val unmatchedEntries: List<String> = emptyList(),
+    )
 }
