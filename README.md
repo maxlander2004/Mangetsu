@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<a href="https://github.com/maxlander2004/max-manga-reader">
+<a href="https://github.com/maxlander2004/Mangetsu">
   <img src=".github/readme-images/app-icon.png" alt="Mangetsu" height="160" width="160">
 </a>
 
@@ -12,8 +12,8 @@
 
 <div align="center">
 
-[![Build debug APK](https://github.com/maxlander2004/max-manga-reader/actions/workflows/apk.yml/badge.svg?labelColor=27303D)](https://github.com/maxlander2004/max-manga-reader/actions/workflows/apk.yml)
-[![License: Apache-2.0](https://img.shields.io/github/license/maxlander2004/max-manga-reader?labelColor=27303D&color=0877d2)](LICENSE)
+[![Build debug APK](https://github.com/maxlander2004/Mangetsu/actions/workflows/apk.yml/badge.svg?labelColor=27303D)](https://github.com/maxlander2004/Mangetsu/actions/workflows/apk.yml)
+[![License: Apache-2.0](https://img.shields.io/github/license/maxlander2004/Mangetsu?labelColor=27303D&color=0877d2)](LICENSE)
 [![Android](https://img.shields.io/badge/minSdk-26-blue.svg?labelColor=27303D)](https://apilevels.com/api/26)
 [![Mirror: git.aap](https://img.shields.io/badge/mirror-git.aap-red.svg?labelColor=27303D)](https://git.aap.my.id/maxlander2004/mangetsu)
 
@@ -23,13 +23,23 @@
 
 ## Download
 
-The debug APK is built on every push to `main` and `master` by CI. The latest artifact is on the [Actions page](https://github.com/maxlander2004/max-manga-reader/actions/workflows/apk.yml).
+The latest debug APK is on the [releases page](https://github.com/maxlander2004/Mangetsu/releases/tag/debug-1.10.3). It is built on every push to `main` and `master` by CI — the build badge above shows the latest run.
+
+APKs included (all 5 standard arch variants):
+
+- `Mangetsu-arm64-v8a-v1.10.3.apk` — arm64-v8a
+- `Mangetsu-armeabi-v7a-v1.10.3.apk` — armeabi-v7a
+- `Mangetsu-v1.10.3.apk` — universal (runs on any device)
+- `Mangetsu-x86-v1.10.3.apk` — x86
+- `Mangetsu-x86_64-v1.10.3.apk` — x86_64
+
+This is a **debug** build, not a signed release build. Install it directly on a device.
 
 You can also build it yourself:
 
 ```bash
-git clone https://github.com/maxlander2004/max-manga-reader.git
-cd max-manga-reader
+git clone https://github.com/maxlander2004/Mangetsu.git
+cd Mangetsu
 ./gradlew :app:assembleStandardDebug
 ls app/build/outputs/apk/standard/debug/*.apk
 ```
@@ -93,7 +103,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 <details><summary>Issues</summary>
 
-Before reporting a new issue, check the [FAQ](https://mihon.app/docs/faq/general), the [changelog](https://github.com/maxlander2004/max-manga-reader/releases) and the already opened [issues](https://github.com/maxlander2004/max-manga-reader/issues).
+Before reporting a new issue, check the [FAQ](https://mihon.app/docs/faq/general), the [changelog](https://github.com/maxlander2004/Mangetsu/releases) and the already opened [issues](https://github.com/maxlander2004/Mangetsu/issues).
 
 </details>
 
