@@ -38,7 +38,7 @@ ls app/build/outputs/apk/standard/debug/*.apk
 
 ## About this fork
 
-Mangetsu is a personal rebrand of a fork of Yōkai / Mihon. It is a reader for manga you already have or can download yourself — it does not host any manga.
+Mangetsu is a free and open source manga reader for Android. It is a reader for manga you already have or can download yourself — it does not host any manga.
 
 The project exists to keep hold of the things that matter to the owner: a clean reader, sensible library behavior, and a small set of upgrades that are useful day to day. It is also a place to try modest new tech without committing every change to the upstream readers.
 
@@ -58,17 +58,6 @@ The project exists to keep hold of the things that matter to the owner: a clean 
 
 </details>
 
-<details>
-<summary><h3>What this fork keeps from Yōkai / Mihon</h3></summary>
-
-- Torii — manga downloader that downloads individual manga rather than copying whole files.
-- Torii — local source chapters read their own headings.
-- Torii — the library supports a lot of tracking.
-- Torii — the library can be backed up to read offline or to cloud.
-- Torii — the library supports updates from MANGA / ANILIST / Kitsu / Manga Updates / Shikimori / Bangumi.
-- Torii — the library page is a single list view.
-
-</details>
 
 <details>
 <summary><h3>What this fork keeps from J2K</h3></summary>
