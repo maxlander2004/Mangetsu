@@ -51,7 +51,6 @@ class BackupRestorer(
     private suspend fun performRestore(uri: Uri) {
         val backup = BackupUtil.decodeBackup(context, uri)
 
-        backup.warnings.forEach { errors.add(Date() to it) }
         backup.unmatchedEntries.forEach { errors.add(Date() to "Not imported, no matching source: $it") }
 
         restoreAmount = backup.backupManga.size + 3 // +3 for categories, app prefs, source prefs

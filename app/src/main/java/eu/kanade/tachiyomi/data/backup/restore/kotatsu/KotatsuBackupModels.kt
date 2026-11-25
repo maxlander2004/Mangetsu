@@ -11,9 +11,9 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * JSON models for the Kotatsu / Kotatsu Redo `.bk.zip` backup.
  *
- * The archive is a plain zip whose entries are JSON arrays named without a file extension
- * (`favourites`, `categories`, `history`, `index`, `bookmarks`, `settings`, ...). Some builds
- * write the same names with a `.json` suffix, which [KotatsuBackupConverter] handles.
+ * The archive is a zip of JSON arrays named after the data they hold (`favourites`, `categories`,
+ * `history`, `index`, ...), without a file extension in current builds. Unknown keys are ignored,
+ * so only the fields used by [KotatsuBackupConverter] are declared here.
  */
 internal val kotatsuJson: Json = Json {
     ignoreUnknownKeys = true
@@ -26,18 +26,14 @@ internal val kotatsuJson: Json = Json {
 data class KotatsuManga(
     val id: Long = 0,
     val title: String = "",
-    @SerialName("alt_title") val altTitle: String? = null,
     val url: String = "",
     @SerialName("public_url") val publicUrl: String = "",
-    val rating: Float = 0f,
-    val nsfw: Boolean = false,
-    @SerialName("content_rating") val contentRating: String? = null,
     @SerialName("cover_url") val coverUrl: String? = null,
     @SerialName("large_cover_url") val largeCoverUrl: String? = null,
     val state: String? = null,
     val author: String? = null,
     val source: String = "",
-    // Array of tag objects in current Kotatsu, plain strings in old backups.
+    // Tag objects in current Kotatsu, plain strings in older backups.
     val tags: List<JsonElement> = emptyList(),
 ) {
     val tagTitles: List<String>
@@ -58,13 +54,11 @@ data class KotatsuChapter(
     val url: String = "",
     val scanlator: String? = null,
     @SerialName("upload_date") val uploadDate: Long = 0,
-    val branch: String? = null,
 )
 
 @Serializable
 data class KotatsuCategory(
     @SerialName("category_id") val categoryId: Long = 0,
-    @SerialName("created_at") val createdAt: Long = 0,
     @SerialName("sort_key") val sortKey: Int = 0,
     val title: String = "",
 )
@@ -73,8 +67,6 @@ data class KotatsuCategory(
 data class KotatsuFavourite(
     @SerialName("manga_id") val mangaId: Long = 0,
     @SerialName("category_id") val categoryId: Long = 0,
-    @SerialName("sort_key") val sortKey: Int = 0,
-    val pinned: Boolean = false,
     @SerialName("created_at") val createdAt: Long = 0,
     val manga: KotatsuManga? = null,
 )
@@ -82,12 +74,9 @@ data class KotatsuFavourite(
 @Serializable
 data class KotatsuHistory(
     @SerialName("manga_id") val mangaId: Long = 0,
-    @SerialName("created_at") val createdAt: Long = 0,
     @SerialName("updated_at") val updatedAt: Long = 0,
     @SerialName("chapter_id") val chapterId: Long = 0,
     val page: Int = 0,
-    val scroll: Double = 0.0,
-    val percent: Float = 0f,
 )
 
 @Serializable

@@ -785,7 +785,6 @@
     <string name="restore_unmatched_entries">Not imported, no matching source here:</string>
     <string name="restore_unmatched_entries_more">…and %d more, they will be listed in the restore log.</string>
     <string name="data_saver">Save mobile data</string>
-    <string name="data_saver_summary">Preload a single page while reading</string>
     <string name="restoring_backup_canceled">Canceled restore</string>
     <string name="backup_restore_invalid_uri">Error: empty URI</string>
     <string name="creating_backup">Creating backup</string>

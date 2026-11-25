@@ -19,12 +19,6 @@ data class Backup(
 ) {
 
     /**
-     * Issues found while converting a backup from another app, reported in the restore log.
-     */
-    @Transient
-    var warnings: List<String> = emptyList()
-
-    /**
      * Library entries of a converted backup that could not be matched to a source here.
      */
     @Transient

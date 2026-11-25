@@ -142,11 +142,13 @@ object SettingsDataScreen : ComposableSettings() {
                     Pair(null, e)
                 }
 
-                alertDialog.awaitRestoreBackup(
-                    context = context,
-                    uri = it,
-                    pair = results,
-                )
+                withUIContext {
+                    alertDialog.awaitRestoreBackup(
+                        context = context,
+                        uri = it,
+                        pair = results,
+                    )
+                }
             }
         }
 

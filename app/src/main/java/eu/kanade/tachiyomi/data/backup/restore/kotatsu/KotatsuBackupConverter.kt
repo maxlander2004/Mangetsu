@@ -17,8 +17,8 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 /**
- * Converts a Kotatsu / Kotatsu Redo `.bk.zip` backup into the backup model used by the restore
- * pipeline, so the existing restore flow handles the import.
+ * Converts a Kotatsu / Kotatsu Redo `.bk.zip` backup into the model used by the restore pipeline,
+ * so the existing restore flow handles the import.
  *
  * Entries whose source has no equivalent here are not imported; they are reported through
  * [Backup.unmatchedEntries] so the restore dialog can list them before anything is written.
@@ -29,110 +29,84 @@ class KotatsuBackupConverter(
 
     fun convert(archive: InputStream): Backup {
         val sections = readSections(archive)
-        val categories: List<KotatsuCategory> = decodeSection(sections, "categories")
-        val favourites: List<KotatsuFavourite> = decodeSection(sections, "favourites")
+        val categories = decodeSection<KotatsuCategory>(sections, "categories").sortedBy { it.sortKey }
+        val favourites = decodeSection<KotatsuFavourite>(sections, "favourites")
         val index = decodeSection<KotatsuIndexEntry>(sections, "index").associateBy { it.mangaId }
         val history = decodeSection<KotatsuHistory>(sections, "history").associateBy { it.mangaId }
 
+        // A manga is stored once per category it is in, so the favourites are merged by manga id.
+        // Restore matches a manga's categories by a category's order, hence the list position.
+        val categoryOrders = categories.mapIndexed { position, category -> category.categoryId to position }.toMap()
+
         val unmatched = mutableListOf<String>()
-        val warnings = mutableListOf<String>()
-
-        val sortedCategories = categories.sortedWith(compareBy({ it.sortKey }, { it.createdAt }))
-        val categoryIndex = sortedCategories
-            .mapIndexed { index, category -> category.categoryId to index }
-            .toMap()
-        val backupCategories = sortedCategories.map { BackupCategory(name = it.title.ifBlank { "Category" }, order = it.sortKey) }
-
         val sources = linkedMapOf<Long, BackupSource>()
         val mangas = mutableListOf<BackupManga>()
 
-        // A manga appears once per category it is in, so entries are merged by manga id.
-        favourites
-            .groupBy { it.mangaId }
-            .forEach { (_, rows) ->
-                val favourite = rows.first()
-                val manga = rows.firstNotNullOfOrNull { it.manga }
-                if (manga == null) {
-                    warnings.add("Skipped a favourite without manga data")
-                    return@forEach
-                }
-
-                val candidate = resolver.resolve(manga)
-                if (candidate == null) {
-                    unmatched.add("${manga.title} (${manga.source.ifBlank { "unknown source" }})")
-                    return@forEach
-                }
-
-                sources.getOrPut(candidate.id) { BackupSource(name = candidate.name, sourceId = candidate.id) }
-
-                val chapters = index[manga.id]?.chapters.orEmpty()
-                val historyEntry = history[manga.id]
-                val lastReadChapter = chapters.firstOrNull { it.id == historyEntry?.chapterId }
-                val lastReadChapterDate = lastReadChapter?.uploadDate ?: 0L
-
-                val backupChapters = chapters.mapIndexed { order, chapter ->
-                    val isLastRead = chapter.id == historyEntry?.chapterId
-                    BackupChapter(
-                        url = chapter.url.ifBlank { chapter.id.toString() },
-                        name = chapter.name.ifBlank { chapter.url },
-                        scanlator = chapter.scanlator?.takeIf { it.isNotBlank() },
-                        read = isLastRead ||
-                            (lastReadChapterDate > 0 && chapter.uploadDate in 1 until lastReadChapterDate),
-                        bookmark = false,
-                        lastPageRead = if (isLastRead) historyEntry?.page ?: 0 else 0,
-                        dateFetch = chapter.uploadDate * 1000L,
-                        dateUpload = chapter.uploadDate * 1000L,
-                        chapterNumber = chapter.number,
-                        sourceOrder = order,
-                    )
-                }
-
-                val backupHistory = if (lastReadChapter != null && historyEntry != null) {
-                    listOf(
-                        BackupHistory(
-                            url = lastReadChapter.url.ifBlank { lastReadChapter.id.toString() },
-                            lastRead = historyEntry.updatedAt * 1000L,
-                        ),
-                    )
-                } else {
-                    emptyList()
-                }
-
-                if (chapters.isEmpty()) {
-                    warnings.add("${manga.title}: no chapters in the Kotatsu index, only the series was imported")
-                }
-
-                mangas.add(
-                    BackupManga(
-                        source = candidate.id,
-                        url = manga.url.ifBlank { manga.publicUrl.ifBlank { manga.title } },
-                        title = manga.title.ifBlank { manga.url },
-                        artist = null,
-                        author = manga.author?.takeIf { it.isNotBlank() },
-                        description = null,
-                        genre = manga.tagTitles,
-                        status = statusOf(manga.state),
-                        thumbnailUrl = (manga.coverUrl ?: manga.largeCoverUrl)?.takeIf { it.isNotBlank() },
-                        dateAdded = (favourite.createdAt.takeIf { it > 0 } ?: System.currentTimeMillis() / 1000L) * 1000L,
-                        viewer = 0,
-                        chapters = backupChapters,
-                        categories = rows.mapNotNull { categoryIndex[it.categoryId] }.distinct().sorted(),
-                        favorite = true,
-                        history = backupHistory,
-                    ),
-                )
+        favourites.groupBy { it.mangaId }.values.forEach { rows ->
+            val manga = rows.firstNotNullOfOrNull { it.manga } ?: return@forEach
+            val candidate = resolver.resolve(manga)
+            if (candidate == null) {
+                unmatched.add("${manga.title} (${manga.source.ifBlank { "unknown source" }})")
+                return@forEach
             }
+
+            sources.getOrPut(candidate.id) { BackupSource(name = candidate.name, sourceId = candidate.id) }
+
+            val chapters = index[manga.id]?.chapters.orEmpty()
+            val historyEntry = history[manga.id]
+            val lastRead = chapters.firstOrNull { it.id == historyEntry?.chapterId }
+            val lastReadDate = lastRead?.uploadDate ?: 0L
+
+            mangas.add(
+                BackupManga(
+                    source = candidate.id,
+                    url = manga.url.ifBlank { manga.publicUrl.ifBlank { manga.title } },
+                    title = manga.title.ifBlank { manga.url },
+                    author = manga.author?.takeIf { it.isNotBlank() },
+                    genre = manga.tagTitles,
+                    status = statusOf(manga.state),
+                    thumbnailUrl = (manga.coverUrl ?: manga.largeCoverUrl)?.takeIf { it.isNotBlank() },
+                    dateAdded = (rows.first().createdAt.takeIf { it > 0 } ?: System.currentTimeMillis() / 1000L) * 1000L,
+                    chapters = chapters.mapIndexed { order, chapter ->
+                        val url = chapter.url.ifBlank { chapter.id.toString() }
+                        val isLastRead = chapter.id == historyEntry?.chapterId
+                        BackupChapter(
+                            url = url,
+                            name = chapter.name.ifBlank { url },
+                            scanlator = chapter.scanlator?.takeIf { it.isNotBlank() },
+                            // Everything before the last read chapter was read as well.
+                            read = isLastRead || (lastReadDate > 0 && chapter.uploadDate > 0 && chapter.uploadDate < lastReadDate),
+                            lastPageRead = if (isLastRead) historyEntry?.page ?: 0 else 0,
+                            dateUpload = chapter.uploadDate * 1000L,
+                            chapterNumber = chapter.number,
+                            sourceOrder = order,
+                        )
+                    },
+                    categories = rows.mapNotNull { categoryOrders[it.categoryId] }.distinct().sorted(),
+                    history = if (historyEntry != null && lastRead != null) {
+                        listOf(
+                            BackupHistory(
+                                url = lastRead.url.ifBlank { lastRead.id.toString() },
+                                lastRead = historyEntry.updatedAt * 1000L,
+                            ),
+                        )
+                    } else {
+                        emptyList()
+                    },
+                ),
+            )
+        }
 
         return Backup(
             backupManga = mangas,
-            backupCategories = backupCategories,
+            backupCategories = categories.mapIndexed { position, category ->
+                BackupCategory(name = category.title.ifBlank { "Category $position" }, order = position)
+            },
             backupSources = sources.values.toList(),
-        ).also {
-            it.warnings = warnings
-            it.unmatchedEntries = unmatched
-        }
+        ).also { it.unmatchedEntries = unmatched }
     }
 
+    /** Reads the sections the import needs and leaves the rest (settings, covers, ...) in the zip. */
     private fun readSections(archive: InputStream): Map<String, String> {
         val sections = mutableMapOf<String, String>()
         ZipInputStream(archive.buffered()).use { zip ->
@@ -140,7 +114,7 @@ class KotatsuBackupConverter(
                 val entry = zip.nextEntry ?: break
                 if (entry.isDirectory) continue
                 val name = entry.name.substringAfterLast('/').substringBeforeLast('.')
-                sections[name] = zip.readBytes().decodeToString()
+                if (name in SECTIONS) sections[name] = zip.readBytes().decodeToString()
             }
         }
         return sections
@@ -165,6 +139,8 @@ class KotatsuBackupConverter(
     }
 
     companion object {
+        private val SECTIONS = setOf("categories", "favourites", "history", "index")
+
         fun create(): KotatsuBackupConverter {
             val sourceManager = Injekt.get<SourceManager>()
             val extensionManager = Injekt.get<ExtensionManager>()
