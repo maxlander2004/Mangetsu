@@ -6,9 +6,7 @@
   <img src=".github/readme-images/app-icon.png" alt="Mangetsu" height="160" width="160">
 </a>
 
-**Mangetsu · 満月**
-
-A free and open source manga reader for Android.
+**Mangetsu · 満月** — a free and open source manga reader for Android.
 
 </div>
 
@@ -38,9 +36,9 @@ ls app/build/outputs/apk/standard/debug/*.apk
 
 ## About this fork
 
-Mangetsu is a free and open source manga reader for Android. It is a reader for manga you already have or can download yourself — it does not host any manga.
+Mangetsu is a free and open source manga reader for Android. It reads manga you already have or can download yourself — it does not host any manga.
 
-The project exists to keep hold of the things that matter to the owner: a clean reader, sensible library behavior, and a small set of upgrades that are useful day to day. It is also a place to try modest new tech without committing every change to the upstream readers.
+The project exists to keep the things that matter to the owner: a clean reader, sensible library behavior, and a small set of upgrades that are useful day to day. It is also a place to try modest new tech without committing every change upstream.
 
 ## Features
 
@@ -49,33 +47,32 @@ The project exists to keep hold of the things that matter to the owner: a clean 
 <details>
 <summary><h3>What is new in Mangetsu</h3></summary>
 
-- Full moon over a torii — the launcher icon is built from the repository, so the same art is what you install and what you see on the repo.
-- Torii — the reader supports many reading directions and keeps each manga's own layout.
-- Torii — the library is a single list view with categories you can expand.
-- Torii — icons and media are read from your device, so offline libraries still work.
-- Tei — the details screen, shelf and recents keep the look you set.
-- Tei — share sheets and drag and drop sorting work the way you would expect.
+- The launcher icon is built from the repository — the same torii-and-full-moon art is what you install and what you see on the repo.
+- Many reading directions, with each manga keeping its own layout.
+- A single library list view with categories you can expand.
+- Icons and media read from your device, so offline libraries still work.
+- A details screen, shelf and recents that keep the look you set.
+- Share sheets and drag-and-drop sorting that work the way you would expect.
 
 </details>
-
 
 <details>
 <summary><h3>What this fork keeps from J2K</h3></summary>
 
-- Tei — UI design of the manga details screen.
-- Tei — the library page is redesigned as a single list view.
-- Tei — expandable categories.
-- Tei — centred shelf.
-- Tei — expanded toolbar.
-- Tei — floating search bar.
-- Tei — combined pages for a better tablet experience.
-- Tei — group books by categories, status, source, and tag.
-- Tei — comprehensive recents screen.
-- Tei — shelf page.
-- Tei — dynamic shortcuts.
-- Tei — share sheets the right way.
-- Tei — a lot more Material 3.
-- Tei — Android 12 features such as automatic extension and app updates.
+- The manga details screen UI design.
+- A library page redesigned as a single list view.
+- Expandable categories.
+- A centred shelf.
+- An expanded toolbar.
+- A floating search bar.
+- Combined pages for a better tablet experience.
+- Books grouped by categories, status, source, and tag.
+- A comprehensive recents screen.
+- A shelf page.
+- Dynamic shortcuts.
+- Share sheets done the right way.
+- More Material 3 throughout.
+- Android 12 features such as automatic extension and app updates.
 
 </details>
 
