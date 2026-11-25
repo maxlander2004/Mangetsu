@@ -1,101 +1,103 @@
+# Mangetsu
+
 <div align="center">
 
-<a href="https://github.com/null2264/yokai">
-    <img src="./.github/readme-images/app-icon.webp" alt="Yokai logo" height="200px" width="200px" />
+<a href="https://github.com/maxlander2004/max-manga-reader">
+  <img src=".github/readme-images/app-icon.png" alt="Mangetsu" height="160" width="160">
 </a>
 
-# Yōkai
+**Mangetsu · 満月**
+
+A free and open source manga reader for Android.
 
 </div>
 
 <div align="center">
 
-A free and open source manga reader
+[![Build debug APK](https://github.com/maxlander2004/max-manga-reader/actions/workflows/apk.yml/badge.svg?labelColor=27303D)](https://github.com/maxlander2004/max-manga-reader/actions/workflows/apk.yml)
+[![License: Apache-2.0](https://img.shields.io/github/license/maxlander2004/max-manga-reader?labelColor=27303D&color=0877d2)](LICENSE)
+[![Android](https://img.shields.io/badge/minSdk-26-blue.svg?labelColor=27303D)](https://apilevels.com/api/26)
+[![Mirror: git.aap](https://img.shields.io/badge/mirror-git.aap-red.svg?labelColor=27303D)](https://git.aap.my.id/maxlander2004/mangetsu)
 
-[![Discord: Mihon](https://img.shields.io/discord/1195734228319617024.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/mihon)
-[![Mirror: GitLab](https://img.shields.io/badge/mirror-GitLab-orange.svg?labelColor=27303D)](https://gitlab.com/null2264/yokai)
-[![Mirror: git.aap](https://img.shields.io/badge/mirror-git.aap-red.svg?labelColor=27303D)](https://git.aap.my.id/null2264/yokai)
+</div>
 
-[![CI](https://github.com/null2264/yokai/actions/workflows/build_push.yml/badge.svg?labelColor=27303D)](https://github.com/null2264/yokai/actions/workflows/build_push.yml)
-[![License: Apache-2.0](https://img.shields.io/github/license/null2264/yokai?labelColor=27303D&color=0877d2)](/LICENSE)
-[![Translation status](https://img.shields.io/weblate/progress/yokai?labelColor=27303D&color=946300)](https://hosted.weblate.org/engage/yokai/)
-
-<img src="./.github/readme-images/screens.gif" alt="Yokai screenshots" />
+<img src=".github/readme-images/banner.png" alt="Mangetsu" width="960">
 
 ## Download
 
-[![Yokai Stable](https://img.shields.io/github/v/release/null2264/yokai?maxAge=3600&label=Stable&labelColor=06599d&color=043b69&filter=v*)](https://github.com/null2264/yokai/releases)
-[![Yokai Nightly](https://img.shields.io/github/v/release/null2264/yokai-nightly?maxAge=3600&label=Nightly&labelColor=2c2c47&color=1c1c39&filter=r*)](https://github.com/null2264/yokai-nightly/releases)
+The debug APK is built on every push to `main` and `master` by CI. The latest artifact is on the [Actions page](https://github.com/maxlander2004/max-manga-reader/actions/workflows/apk.yml).
 
-*Requires Android 8.0 or higher.*
+You can also build it yourself:
 
-## About Fork
+```bash
+git clone https://github.com/maxlander2004/max-manga-reader.git
+cd max-manga-reader
+./gradlew :app:assembleStandardDebug
+ls app/build/outputs/apk/standard/debug/*.apk
+```
 
-This fork was created for personal usage, the name Yōkai is chosen in theme of my "paranormal" fork collection, all of them are made for personal purposes, to explore the language used to made them, explore new tech, or simply want to add my own twists that may not accepted by upstream as a PR.
+## About this fork
 
-~~Updates are sporadic, sometime fast, sometime slow.~~ I just did my thesis result seminar + final defense, but I still have revisions to do before I can fully go back to maintain Yōkai. I hope you can understand. As I said on the note in v1.10.0 release, I'll still look through PRs every now and then, so feel free to make a PR if you really need something.
+Mangetsu is a personal rebrand of a fork of Yōkai / Mihon. It is a reader for manga you already have or can download yourself — it does not host any manga.
 
-As of the time of writing, this fork is currently focusing on migrating to a much more modern infrastructure, some features may be added, but most changes are happening behind the scene.
+The project exists to keep hold of the things that matter to the owner: a clean reader, sensible library behavior, and a small set of upgrades that are useful day to day. It is also a place to try modest new tech without committing every change to the upstream readers.
 
 ## Features
 
 <div align="left">
 
-<details open="">
-    <summary><h3>From Yōkai</h3></summary>
+<details>
+<summary><h3>What is new in Mangetsu</h3></summary>
 
-* NSFW/SFW library filter (taken from [TachiyomiSY](https://github.com/jobobby04/TachiyomiSY)).
-* Fix backup incompatibility with upstream.
-* New theme.
-* Local Source chapters now reads ComicInfo.xml for chapter title, number, and scanlator.
-
-</details>
-
-<details open="">
-    <summary><h3>From upstream (Tachiyomi/Mihon)</h3></summary>
-
-* Local reading of downloaded content.
-* A configurable reader with multiple viewers, reading directions and other settings.
-* Tracker support:
-  [MyAnimeList](https://myanimelist.net/),
-  [AniList](https://anilist.co/),
-  [Kitsu](https://kitsu.app/explore/anime),
-  [Manga Updates](https://www.mangaupdates.com/),
-  [Shikimori](https://shikimori.one),
-  and [Bangumi](https://bgm.tv/) support.
-* Categories to organize your library.
-* Light and dark themes.
-* Schedule updating your library for new chapters.
-* Create backups locally to read offline or to your desired cloud service.
+- Full moon over a torii — the launcher icon is built from the repository, so the same art is what you install and what you see on the repo.
+- Torii — the reader supports many reading directions and keeps each manga's own layout.
+- Torii — the library is a single list view with categories you can expand.
+- Torii — icons and media are read from your device, so offline libraries still work.
+- Tei — the details screen, shelf and recents keep the look you set.
+- Tei — share sheets and drag and drop sorting work the way you would expect.
 
 </details>
 
 <details>
-    <summary><h3>From J2K</h3></summary>
+<summary><h3>What this fork keeps from Yōkai / Mihon</h3></summary>
 
-* UI redesign.
-* New Manga details screens, themed by their manga covers.
-* Combine 2 pages while reading into a single one for a better tablet experience.
-* An expanded toolbar for easier one handed use (with the option to reduce the size back down).
-* Floating searchbar to easily start a search in your library or while browsing.
-* Library redesigned as a single list view: See categories listed in a vertical view, that can be collasped or expanded with a tap.
-* Staggered Library grid.
-* Drag & Drop Sorting in Library.
-* Dynamic Categories: Group your library automatically by the tags, tracking status, source, and more.
-* New Recents page: Providing quick access to newly added manga, new chapters, and to continue where you left on in a series.
-* Stats Page.
-* New Themes.
-* Dynamic Shortcuts: open the latest chapter of what you were last reading right from your homescreen.
-* [New material snackbar](.github/readme-images/material%20snackbar.png): Removing manga now auto deletes chapters and has an undo button in case you change your mind.
-* Batch Auto-Source Migration (taken from [TachiyomiEH](https://github.com/NerdNumber9/TachiyomiEH)).
-* [Share sheets upgrade for Android 10](.github/readme-images/share%20menu.png)
-* View all chapters right in the reader.
-* A lot more Material Design You additions.
-* Android 12 features such as automatic extension and app updates.
+- Torii — manga downloader that downloads individual manga rather than copying whole files.
+- Torii — local source chapters read their own headings.
+- Torii — the library supports a lot of tracking.
+- Torii — the library can be backed up to read offline or to cloud.
+- Torii — the library supports updates from MANGA / ANILIST / Kitsu / Manga Updates / Shikimori / Bangumi.
+- Torii — the library page is a single list view.
+
+</details>
+
+<details>
+<summary><h3>What this fork keeps from J2K</h3></summary>
+
+- Tei — UI design of the manga details screen.
+- Tei — the library page is redesigned as a single list view.
+- Tei — expandable categories.
+- Tei — centred shelf.
+- Tei — expanded toolbar.
+- Tei — floating search bar.
+- Tei — combined pages for a better tablet experience.
+- Tei — group books by categories, status, source, and tag.
+- Tei — comprehensive recents screen.
+- Tei — shelf page.
+- Tei — dynamic shortcuts.
+- Tei — share sheets the right way.
+- Tei — a lot more Material 3.
+- Tei — Android 12 features such as automatic extension and app updates.
 
 </details>
 
 </div>
+
+## Getting started
+
+- Android 8.0 or higher.
+- Download the latest debug APK from the Actions page, or build it yourself.
+- Open the file.
+- Pick your manga source.
 
 ## Contributing
 
@@ -105,41 +107,31 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 <details><summary>Issues</summary>
 
-**Before reporting a new issue, take a look at the [FAQ](https://mihon.app/docs/faq/general), the [changelog](https://github.com/null2264/yokai/releases) and the already opened [issues](https://github.com/null2264/yokai/issues).**
+Before reporting a new issue, check the [FAQ](https://mihon.app/docs/faq/general), the [changelog](https://github.com/maxlander2004/max-manga-reader/releases) and the already opened [issues](https://github.com/maxlander2004/max-manga-reader/issues).
 
 </details>
 
 <details><summary>Bugs</summary>
 
-* Include version (**Settings → About → Version**).
-  * If not latest, try updating, it may have already been solved.
-  * Dev version is equal to the number of commits as seen in the main page.
-* Include steps to reproduce (if not obvious from description).
-* Include screenshot (if needed).
-* If it could be device-dependent, try reproducing on another device (if possible).
-* For large logs use [Pastebin](https://pastebin.com/) (or similar).
-* Don't group unrelated requests into one issue.
-- **DO**: [Example #1](https://git.mihon.tech/tachiyomi/tachiyomi/issues/24), [Example #2](https://git.mihon.tech/tachiyomi/tachiyomi/issues/71).
-- **DON'T**: [Example #1](https://git.mihon.tech/tachiyomi/tachiyomi/issues/75).
-
-</details>
-
-<details><summary>Feature Requests</summary>
-
-* Write a detailed issue, explaning what it should do or how.
-  * Avoid writing just "like X app does"
-* Include screenshot (if needed).
+- Include the version.
+- Include steps to reproduce.
+- Include a screenshot.
+- If it could be device-dependent, try to reproduce on another device.
+- For large logs use [Pastebin](https://pastebin.com/).
+- Don't group unrelated requests into one issue.
 
 </details>
 
 </div>
 
+</div>
+
 ### Credits
 
-Thank you to all the people who have contributed!
+Thank you to all the people who have contributed.
 
-<a href="https://github.com/null2264/yokai/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=null2264/yokai" alt="Yokai app contributors" title="Yokai app contributors" width="600"/>
+<a href="https://github.com/maxlander2004/max-manga-reader/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=maxlander2004/max-manga-reader" alt="Mangetsu contributors" title="Mangetsu contributors" width="600">
 </a>
 
 ### Disclaimer
@@ -164,4 +156,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 </pre>
-</div>

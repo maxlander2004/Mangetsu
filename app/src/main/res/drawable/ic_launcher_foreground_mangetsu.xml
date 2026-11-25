@@ -1,22 +1,103 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="512"
+    android:viewportHeight="512">
 
-    <!-- Crescent moon, opening to the right -->
-    <path
-        android:fillColor="#FFFFF6DF"
-        android:fillType="evenOdd"
-        android:pathData="M50,27a27,27 0 1,0 0,54a27,27 0 1,0 0,-54zM65,28.5a25.5,25.5 0 1,0 0,51a25.5,25.5 0 1,0 0,-51z" />
+    <!-- Moon and gate, kept inside the adaptive icon safe zone -->
+    <group
+        android:pivotX="256"
+        android:pivotY="250"
+        android:scaleX="0.72"
+        android:scaleY="0.72">
 
-    <!-- Warm star in the opening -->
-    <path
-        android:fillColor="#FFFFC46B"
-        android:pathData="M80,68C81.2,73.8 82.7,75.3 88,74.5C83,76.8 81.4,78.4 80,84C78.6,78.4 77,76.8 72,74.5C77.3,75.3 78.8,73.8 80,68z" />
+        <path android:pathData="M110,240a140,140 0 1,0 280,0a140,140 0 1,0 -280,0z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:centerX="238"
+                    android:centerY="222"
+                    android:gradientRadius="150"
+                    android:type="radial">
+                    <item
+                        android:color="#FFFFFBDC"
+                        android:offset="0.0" />
+                    <item
+                        android:color="#FFFFEFB8"
+                        android:offset="0.62" />
+                    <item
+                        android:color="#FFFBE1A0"
+                        android:offset="1.0" />
+                </gradient>
+            </aapt:attr>
+        </path>
 
-    <!-- Small distant star -->
+        <path
+            android:fillColor="#59E8D49A"
+            android:pathData="M181,205a24,24 0 1,0 48,0a24,24 0 1,0 -48,0z" />
+        <path
+            android:fillColor="#4CE8D49A"
+            android:pathData="M284,286a18,18 0 1,0 36,0a18,18 0 1,0 -36,0z" />
+        <path
+            android:fillColor="#40E8D49A"
+            android:pathData="M260,158a12,12 0 1,0 24,0a12,12 0 1,0 -24,0z" />
+        <path
+            android:fillColor="#40E8D49A"
+            android:pathData="M166,292a14,14 0 1,0 28,0a14,14 0 1,0 -28,0z" />
+
+        <path
+            android:fillColor="#FF150C28"
+            android:pathData="M92,240C150,206 350,206 408,240L408,266C350,234 150,234 92,266Z" />
+        <path
+            android:fillColor="#FF150C28"
+            android:pathData="M138,302h236v24h-236z" />
+        <path
+            android:fillColor="#FF150C28"
+            android:pathData="M240,262h32v42h-32z" />
+        <path
+            android:fillColor="#FF150C28"
+            android:pathData="M176,252h36v260h-36z" />
+        <path
+            android:fillColor="#FF150C28"
+            android:pathData="M300,252h36v260h-36z" />
+    </group>
+
+    <!-- Ground, bleeding past the mask edges -->
     <path
-        android:fillColor="#CCFFD899"
-        android:pathData="M76,31a2,2 0 1,0 0,4a2,2 0 1,0 0,-4z" />
+        android:fillColor="#FF1C1130"
+        android:pathData="M0,404C80,382 170,392 256,414C350,438 440,420 512,396L512,512L0,512Z" />
+    <path
+        android:fillColor="#FF120A22"
+        android:pathData="M0,444C110,416 210,440 300,454C390,468 460,450 512,438L512,512L0,512Z" />
+
+    <!-- Falling petals -->
+    <path
+        android:fillColor="#D9E9A8C6"
+        android:pathData="M132,352a6,6 0 1,0 12,0a6,6 0 1,0 -12,0z" />
+    <path
+        android:fillColor="#D9E9A8C6"
+        android:pathData="M113,408a5,5 0 1,0 10,0a5,5 0 1,0 -10,0z" />
+    <path
+        android:fillColor="#D9E9A8C6"
+        android:pathData="M426,368a6,6 0 1,0 12,0a6,6 0 1,0 -12,0z" />
+    <path
+        android:fillColor="#C7E9A8C6"
+        android:pathData="M447,300a4.5,4.5 0 1,0 9,0a4.5,4.5 0 1,0 -9,0z" />
+
+    <!-- Stars -->
+    <path
+        android:fillColor="#FFFFF3D6"
+        android:pathData="M150,136C151.8,144 153.6,145.8 162,148C153.6,150.2 151.8,152 150,160C148.2,152 146.4,150.2 138,148C146.4,145.8 148.2,144 150,136z" />
+    <path
+        android:fillColor="#FFFFF3D6"
+        android:pathData="M398,180C400.4,190 402.8,192.4 414,195C402.8,197.6 400.4,200 398,210C395.6,200 393.2,197.6 382,195C393.2,192.4 395.6,190 398,180z" />
+    <path
+        android:fillColor="#FFFFF3D6"
+        android:pathData="M330,104C331.4,109 332.4,110 338,111.5C332.4,113 331.4,114 330,119C328.6,114 327.6,113 322,111.5C327.6,110 328.6,109 330,104z" />
+    <path
+        android:fillColor="#FFFFF3D6"
+        android:pathData="M102,238a3.5,3.5 0 1,0 7,0a3.5,3.5 0 1,0 -7,0z" />
+    <path
+        android:fillColor="#FFFFF3D6"
+        android:pathData="M425,248a3,3 0 1,0 6,0a3,3 0 1,0 -6,0z" />
 </vector>

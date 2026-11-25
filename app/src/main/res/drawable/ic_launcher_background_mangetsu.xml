@@ -2,32 +2,51 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="512"
+    android:viewportHeight="512">
 
-    <path android:pathData="M0,0h108v108h-108z">
+    <path android:pathData="M0,0h512v512h-512z">
         <aapt:attr name="android:fillColor">
             <gradient
-                android:endX="108"
-                android:endY="108"
+                android:endX="0"
+                android:endY="512"
                 android:startX="0"
                 android:startY="0"
                 android:type="linear">
                 <item
-                    android:color="#FF212C5E"
+                    android:color="#FF1B1040"
                     android:offset="0.0" />
                 <item
-                    android:color="#FF121936"
-                    android:offset="0.55" />
+                    android:color="#FF3E2359"
+                    android:offset="0.38" />
                 <item
-                    android:color="#FF060911"
+                    android:color="#FF5C3163"
+                    android:offset="0.66" />
+                <item
+                    android:color="#FF150C28"
                     android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
 
-    <!-- Faint halo behind the moon -->
-    <path
-        android:fillColor="#1AFFD9A0"
-        android:pathData="M24,54a30,30 0 1,0 60,0a30,30 0 1,0 -60,0z" />
+    <!-- Soft halo behind the moon -->
+    <path android:pathData="M35,240a215,215 0 1,0 430,0a215,215 0 1,0 -430,0z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="250"
+                android:centerY="240"
+                android:gradientRadius="215"
+                android:type="radial">
+                <item
+                    android:color="#6BFFE7A8"
+                    android:offset="0.0" />
+                <item
+                    android:color="#24FFD9A0"
+                    android:offset="0.55" />
+                <item
+                    android:color="#00FFD9A0"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

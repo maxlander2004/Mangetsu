@@ -1,15 +1,27 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="512"
+    android:viewportHeight="512">
 
+    <!-- Torii gate silhouette for themed icons -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:fillType="evenOdd"
-        android:pathData="M50,27a27,27 0 1,0 0,54a27,27 0 1,0 0,-54zM65,28.5a25.5,25.5 0 1,0 0,51a25.5,25.5 0 1,0 0,-51z" />
-
+        android:pathData="M92,240C150,206 350,206 408,240L408,266C350,234 150,234 92,266Z" />
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M80,68C81.2,73.8 82.7,75.3 88,74.5C83,76.8 81.4,78.4 80,84C78.6,78.4 77,76.8 72,74.5C77.3,75.3 78.8,73.8 80,68z" />
+        android:pathData="M138,302h236v24h-236z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M240,262h32v42h-32z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M176,252h36v260h-36z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M300,252h36v260h-36z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M110,240a140,140 0 1,1 280,0a140,140 0 1,1 -280,0zM176,252h36v260h-36zM300,252h36v260h-36zM138,302h236v24h-236z"
+        android:fillType="evenOdd" />
 </vector>
