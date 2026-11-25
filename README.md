@@ -112,14 +112,6 @@ Before reporting a new issue, check the [FAQ](https://mihon.app/docs/faq/general
 
 </div>
 
-### Credits
-
-Thank you to all the people who have contributed.
-
-<a href="https://github.com/maxlander2004/max-manga-reader/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=maxlander2004/max-manga-reader" alt="Mangetsu contributors" title="Mangetsu contributors" width="600">
-</a>
-
 ### Disclaimer
 
 The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
