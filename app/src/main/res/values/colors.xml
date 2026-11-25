@@ -29,7 +29,7 @@
     <color name="primaryTachiyomi">#54759E</color>
     <color name="onPrimaryTachiyomi">@color/md_white_1000</color>
     <color name="primaryInverseTachiyomi">#78bcff</color>
-    <color name="splashBackground">@color/yokai_background</color>
+    <color name="splashBackground">@color/mangetsu_background</color>
     <color name="secondaryTachiyomi">@color/md_blue_A400</color>
     <color name="rippleColorTachiyomi">#1F2979FF</color>
     <color name="secondaryVariantTachiyomi">#0d2f68</color>
@@ -107,8 +107,8 @@
     <color name="navigation_next">#CCA6CFD5</color>
     <color name="navigation_prev">#CC7D1128</color>
 
-    <!-- Yokai -->
-    <color name="yokai_background">#0E1418</color>
+    <!-- Mangetsu -->
+    <color name="mangetsu_background">#0E1418</color>
 
     <color name="mangetsu_icon_blue">#12365F</color>
     <color name="mangetsu_icon_orange">#7A3E14</color>
