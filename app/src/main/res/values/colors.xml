@@ -110,6 +110,10 @@
     <!-- Yokai -->
     <color name="yokai_background">#0E1418</color>
 
+    <color name="mangetsu_icon_blue">#12365F</color>
+    <color name="mangetsu_icon_orange">#7A3E14</color>
+    <color name="mangetsu_icon_gray">#2B2F36</color>
+
     <!-- Spring Blossom -->
     <color name="primaryDuskDawn">#a149bf</color>
     <color name="primaryInverseDuskDawn">#cd95e0</color>

@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Crescent moon, opening to the right -->
+    <path
+        android:fillColor="#FFFFF6DF"
+        android:fillType="evenOdd"
+        android:pathData="M50,27a27,27 0 1,0 0,54a27,27 0 1,0 0,-54zM65,28.5a25.5,25.5 0 1,0 0,51a25.5,25.5 0 1,0 0,-51z" />
+
+    <!-- Warm star in the opening -->
+    <path
+        android:fillColor="#FFFFC46B"
+        android:pathData="M80,68C81.2,73.8 82.7,75.3 88,74.5C83,76.8 81.4,78.4 80,84C78.6,78.4 77,76.8 72,74.5C77.3,75.3 78.8,73.8 80,68z" />
+
+    <!-- Small distant star -->
+    <path
+        android:fillColor="#CCFFD899"
+        android:pathData="M76,31a2,2 0 1,0 0,4a2,2 0 1,0 0,-4z" />
+</vector>
