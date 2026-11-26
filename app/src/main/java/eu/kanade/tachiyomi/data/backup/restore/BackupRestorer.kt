@@ -58,6 +58,8 @@ class BackupRestorer(
 
         sourceMapping = backup.backupSources.associate { it.sourceId to it.name }
 
+        val importedMangaIds = mutableListOf<Long>()
+
         coroutineScope {
             // Restore categories
             if (backup.backupCategories.isNotEmpty()) {
@@ -86,6 +88,7 @@ class BackupRestorer(
                     it,
                     backup.backupCategories,
                     onComplete = { manga ->
+                        manga.id?.let { importedMangaIds.add(it) }
                         restoreProgress += 1
                         showRestoreProgress(restoreProgress, restoreAmount, manga.title)
                     },
@@ -97,10 +100,11 @@ class BackupRestorer(
             }
         }
 
-        if (backup.requiresSourceRefresh) {
+        if (backup.requiresSourceRefresh && importedMangaIds.isNotEmpty()) {
             // A converted archive holds no chapters and no descriptions, so fetch them from the
-            // sources now instead of leaving every entry empty until it is opened.
-            LibraryUpdateJob.startNow(context)
+            // sources now instead of leaving every entry empty until it is opened. Only the entries
+            // this restore wrote are updated, not the whole library.
+            LibraryUpdateJob.startNow(context, mangaIds = importedMangaIds.distinct())
         }
         // TODO: optionally trigger online library + tracker update
     }

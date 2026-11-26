@@ -728,6 +728,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             category: Category? = null,
             target: Target = Target.CHAPTERS,
             mangaToUse: List<LibraryManga>? = null,
+            mangaIds: List<Long>? = null,
         ): Boolean {
             if (isRunning(context)) {
                 if (target == Target.CHAPTERS) {
@@ -745,15 +746,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
             val builder = Data.Builder()
             builder.putString(KEY_TARGET, target.name)
-            category?.id?.let { id ->
-                builder.putInt(KEY_CATEGORY, id)
-                if (mangaToUse != null) {
-                    builder.putLongArray(
-                        KEY_MANGAS,
-                        mangaToUse.firstOrNull()?.manga?.id?.let { longArrayOf(it) } ?: longArrayOf(),
-                    )
-                    extraManga = mangaToUse.subList(1, mangaToUse.size).mapNotNull { it.manga.id }
-                }
+            category?.id?.let { id -> builder.putInt(KEY_CATEGORY, id) }
+
+            // Limiting the update works without a category, e.g. after a restore. The ids ride in
+            // the work data for the first one and in the static list for the rest, as the data size
+            // is capped.
+            val idsToUpdate = mangaIds ?: mangaToUse?.mapNotNull { it.manga.id }
+            if (idsToUpdate != null) {
+                builder.putLongArray(
+                    KEY_MANGAS,
+                    idsToUpdate.firstOrNull()?.let { longArrayOf(it) } ?: longArrayOf(),
+                )
+                extraManga = idsToUpdate.drop(1)
             }
             val inputData = builder.build()
             val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
