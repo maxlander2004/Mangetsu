@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.domain.manga.models.Manga
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.util.chapter.ChapterUtil
+import eu.kanade.tachiyomi.util.manga.mangaUrlPath
 import eu.kanade.tachiyomi.util.manga.MangaUtil
 import eu.kanade.tachiyomi.util.system.launchNow
 import kotlin.math.max
@@ -53,6 +54,7 @@ class MangaBackupRestorer(
     suspend fun restoreManga(
         backupManga: BackupManga,
         backupCategories: List<BackupCategory>,
+        existing: Map<String, Manga> = emptyMap(),
         onComplete: (Manga) -> Unit,
         onError: (Manga, Throwable) -> Unit,
     ) {
@@ -67,6 +69,10 @@ class MangaBackupRestorer(
 
         try {
             val dbManga = getManga.awaitByUrlAndSource(manga.url, manga.source)
+                // An entry of an earlier import can carry a whole url instead of the path its
+                // source builds requests from; matching it on the path means the update below
+                // rewrites it in place instead of adding a second entry next to the broken one.
+                ?: existing[mangaUrlPath(manga.url)]
             if (dbManga == null) {
                 // Manga not in database
                 restoreNewManga(manga, chapters, categories, history, tracks, backupCategories, filteredScanlators, customManga)

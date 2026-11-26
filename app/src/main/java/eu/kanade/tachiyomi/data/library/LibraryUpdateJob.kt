@@ -10,6 +10,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -143,6 +144,16 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     // For updates delete removed chapters if not preference is set as well
     private val deleteRemoved by lazy { preferences.deleteRemovedChapters().get() != 1 }
 
+    // A Kotatsu import writes entries without details, so the refresh that follows it fetches them
+    // together with the chapters; a normal library update only asks for chapters.
+    private val refreshDetails: Boolean = inputData.getBoolean(KEY_FETCH_DETAILS, false)
+
+    // Set for the refresh that follows an import, so its outcome is always reported.
+    private val fromImport: Boolean = inputData.getBoolean(KEY_FROM_IMPORT, false)
+
+    // Entries of this run that their source answered for, used by the import report.
+    private val refreshedIds: MutableSet<Long> = java.util.Collections.synchronizedSet(mutableSetOf())
+
     private val notifier = LibraryUpdateNotifier(context.localeContext)
 
     override suspend fun doWork(): Result {
@@ -170,8 +181,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             preferences.libraryUpdateLastTimestamp().set(Date().time)
         }
 
-        val savedMangasList = inputData.getLongArray(KEY_MANGAS)?.asList()?.plus(extraManga)
-        extraManga = emptyList()
+        val savedMangasList = inputData.getLongArray(KEY_MANGAS)?.asList()
 
         val mangaList = (
             if (savedMangasList != null) {
@@ -286,8 +296,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                         if (networkManga != null) {
                             manga.manga.prepareCoverUpdate(coverCache, networkManga, false)
                             val thumbnailUrl = manga.manga.thumbnail_url
-                            manga.manga.copyFrom(networkManga)
-                            manga.manga.initialized = true
+                            val update = manga.manga.applyFetchedDetails(networkManga)
                             val request: ImageRequest =
                                 if (thumbnailUrl != manga.manga.thumbnail_url) {
                                     // load new covers in background
@@ -300,7 +309,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                         .build()
                                 }
                             context.imageLoader.execute(request)
-                            updateManga.await(manga.manga.toMangaUpdate())
+                            updateManga.await(update)
                         }
                     }
                 }
@@ -369,7 +378,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             ).getUriCompat(context)
             notifier.showUpdateSkippedNotification(skippedUpdates.map { it.key.title }, skippedFile)
         }
-        if (failedUpdates.isNotEmpty() && Notifications.isNotificationChannelEnabled(context, Notifications.CHANNEL_LIBRARY_ERROR)) {
+        if (fromImport) {
+            Logger.i {
+                "Import refresh: " + importRefreshSummary(
+                    requested = inputData.getLongArray(KEY_MANGAS)?.asList().orEmpty(),
+                    refreshed = refreshedIds.toList(),
+                    failed = failedUpdates.keys.map { it.title },
+                )
+            }
+        }
+        // A refresh that follows an import is user-initiated, so its failures are reported even
+        // when the library update channel was turned off.
+        if (failedUpdates.isNotEmpty() && (fromImport || Notifications.isNotificationChannelEnabled(context, Notifications.CHANNEL_LIBRARY_ERROR))) {
             val errorFile = writeErrorFile(failedUpdates).getUriCompat(context)
             notifier.showUpdateErrorNotification(failedUpdates.map { it.key.title }, errorFile)
         }
@@ -419,12 +439,17 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             var hasDownloads = false
             ensureActive()
             notifier.showProgressNotification(manga.manga, progress, mangaToUpdate.size)
-            val fetchedChapters = source.getMangaUpdate(
+            val update = source.getMangaUpdate(
                 manga = manga.manga.copy(),
                 chapters = getChapter.awaitAll(manga.manga.id!!, false),
-                fetchDetails = false,
+                fetchDetails = refreshDetails,
                 fetchChapters = true,
-            ).chapters
+            )
+            refreshedIds.add(manga.manga.id!!)
+            if (refreshDetails) {
+                updateManga.await(manga.manga.applyFetchedDetails(update.manga))
+            }
+            val fetchedChapters = update.chapters
 
             if (fetchedChapters.isNotEmpty()) {
                 val newChapters = syncChaptersWithSource(fetchedChapters, manga.manga, source)
@@ -659,9 +684,13 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         private const val KEY_MANGAS = "mangas"
 
-        private var instance: WeakReference<LibraryUpdateJob>? = null
+        /** Asks the run for details as well as chapters; used by the refresh after an import. */
+        private const val KEY_FETCH_DETAILS = "fetchDetails"
 
-        private var extraManga = emptyList<Long>()
+        /** Marks the refresh that follows an import, whose outcome is always reported. */
+        private const val KEY_FROM_IMPORT = "fromImport"
+
+        private var instance: WeakReference<LibraryUpdateJob>? = null
 
         val updateMutableFlow = MutableSharedFlow<Long?>(
             extraBufferCapacity = 10,
@@ -729,6 +758,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             target: Target = Target.CHAPTERS,
             mangaToUse: List<LibraryManga>? = null,
             mangaIds: List<Long>? = null,
+            fetchDetails: Boolean = false,
+            fromImport: Boolean = false,
         ): Boolean {
             if (isRunning(context)) {
                 if (target == Target.CHAPTERS) {
@@ -744,29 +775,37 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 return false
             }
 
-            val builder = Data.Builder()
-            builder.putString(KEY_TARGET, target.name)
-            category?.id?.let { id -> builder.putInt(KEY_CATEGORY, id) }
+            val idsToUpdate = (mangaIds ?: mangaToUse?.mapNotNull { it.manga.id })?.distinct()
+            // Nothing to update: do not queue a run that would only scan the whole library.
+            if (idsToUpdate != null && idsToUpdate.isEmpty()) return false
 
-            // Limiting the update works without a category, e.g. after a restore. The ids ride in
-            // the work data for the first one and in the static list for the rest, as the data size
-            // is capped.
-            val idsToUpdate = mangaIds ?: mangaToUse?.mapNotNull { it.manga.id }
-            if (idsToUpdate != null) {
-                builder.putLongArray(
-                    KEY_MANGAS,
-                    idsToUpdate.firstOrNull()?.let { longArrayOf(it) } ?: longArrayOf(),
-                )
-                extraManga = idsToUpdate.drop(1)
+            fun requestFor(ids: LongArray?): OneTimeWorkRequest {
+                val data = Data.Builder()
+                    .putString(KEY_TARGET, target.name)
+                    .apply { category?.id?.let { putInt(KEY_CATEGORY, it) } }
+                    .apply {
+                        if (fetchDetails) putBoolean(KEY_FETCH_DETAILS, true)
+                        if (fromImport) putBoolean(KEY_FROM_IMPORT, true)
+                    }
+                    .apply { ids?.let { putLongArray(KEY_MANGAS, it) } }
+                    .build()
+                return OneTimeWorkRequestBuilder<LibraryUpdateJob>()
+                    .addTag(TAG)
+                    .addTag(WORK_NAME_MANUAL)
+                    .setInputData(data)
+                    .build()
             }
-            val inputData = builder.build()
-            val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
-                .addTag(TAG)
-                .addTag(WORK_NAME_MANUAL)
-                .setInputData(inputData)
-                .build()
-            WorkManager.getInstance(context)
-                .enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
+
+            // The ids all travel in the work data, which is capped, so a large import is refreshed
+            // by a chain of runs instead of losing every id past the first one to process death.
+            val batches = idsToUpdate?.let { mangaIdBatches(it) }.orEmpty()
+            var chain = WorkManager.getInstance(context).beginUniqueWork(
+                WORK_NAME_MANUAL,
+                ExistingWorkPolicy.KEEP,
+                requestFor(batches.firstOrNull()),
+            )
+            batches.drop(1).forEach { batch -> chain = chain.then(requestFor(batch)) }
+            chain.enqueue()
 
             return true
         }

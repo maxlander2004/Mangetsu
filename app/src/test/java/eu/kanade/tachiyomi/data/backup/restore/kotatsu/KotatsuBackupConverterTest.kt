@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.restore.kotatsu
 
+import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.extension.model.Extension
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -7,6 +8,7 @@ import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -72,12 +74,28 @@ class KotatsuBackupConverterTest {
         )
     }
 
+    @Test
+    fun `an entry with no usable url is reported instead of stored`() {
+        val backup = converted(url = "", publicUrl = "")
+
+        assertTrue(backup.backupManga.isEmpty())
+        assertEquals(1, backup.unmatchedEntries.size)
+        assertTrue(backup.unmatchedEntries.single().contains("A Grimoire Changed My Fate"))
+        assertTrue(backup.unmatchedEntries.single().contains("no usable url"))
+    }
+
     /** Runs a one-entry Kotatsu archive through [KotatsuBackupConverter.convert] and returns its url. */
     private fun restoredUrl(
         url: String,
         publicUrl: String = "",
         baseUrl: String = "https://vortexscans.org",
-    ): String? {
+    ): String? = converted(url, publicUrl, baseUrl).backupManga.single().url
+
+    private fun converted(
+        url: String,
+        publicUrl: String = "",
+        baseUrl: String = "https://vortexscans.org",
+    ): Backup {
         val favourites = """
             [
               {
@@ -95,8 +113,7 @@ class KotatsuBackupConverterTest {
             ]
         """.trimIndent()
 
-        val backup = KotatsuBackupConverter(resolver(baseUrl)).convert(archive(favourites))
-        return backup.backupManga.single().url
+        return KotatsuBackupConverter(resolver(baseUrl)).convert(archive(favourites))
     }
 
     private fun resolver(baseUrl: String): KotatsuSourceResolver {

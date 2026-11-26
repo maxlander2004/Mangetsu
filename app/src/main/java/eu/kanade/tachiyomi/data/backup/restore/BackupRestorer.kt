@@ -8,14 +8,23 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaBackupRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceBackupRestorer
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.util.BackupUtil
+import eu.kanade.tachiyomi.util.manga.mangaUrlPath
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+import yokai.domain.manga.interactor.GetManga
 import yokai.i18n.MR
 import yokai.util.lang.getString
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+
+/** How many restored entries are written at the same time. */
+private const val RESTORE_BATCH_SIZE = 4
 
 class BackupRestorer(
     val context: Context,
@@ -23,8 +32,11 @@ class BackupRestorer(
     private val categoriesBackupRestorer: CategoriesBackupRestorer = CategoriesBackupRestorer(),
     private val mangaBackupRestorer: MangaBackupRestorer = MangaBackupRestorer(),
     private val preferenceBackupRestorer: PreferenceBackupRestorer = PreferenceBackupRestorer(context),
+    private val getManga: GetManga = Injekt.get(),
 ) {
     private var restoreAmount = 0
+
+    @Volatile
     private var restoreProgress = 0
 
     /**
@@ -32,7 +44,7 @@ class BackupRestorer(
      */
     private var sourceMapping: Map<Long, String> = emptyMap()
 
-    private val errors = mutableListOf<Pair<Date, String>>()
+    private val errors = Collections.synchronizedList(mutableListOf<Pair<Date, String>>())
 
     suspend fun restore(uri: Uri) {
         val startTime = System.currentTimeMillis()
@@ -58,7 +70,7 @@ class BackupRestorer(
 
         sourceMapping = backup.backupSources.associate { it.sourceId to it.name }
 
-        val importedMangaIds = mutableListOf<Long>()
+        val importedMangaIds = Collections.synchronizedList(mutableListOf<Long>())
 
         coroutineScope {
             // Restore categories
@@ -81,22 +93,42 @@ class BackupRestorer(
                 showRestoreProgress(restoreProgress, restoreAmount, context.getString(MR.strings.source_settings))
             }
 
-            // Restore individual manga
-            backup.backupManga.forEach {
-                ensureActive()
-                mangaBackupRestorer.restoreManga(
-                    it,
-                    backup.backupCategories,
-                    onComplete = { manga ->
-                        manga.id?.let { importedMangaIds.add(it) }
-                        restoreProgress += 1
-                        showRestoreProgress(restoreProgress, restoreAmount, manga.title)
-                    },
-                    onError = { manga, e ->
-                        val sourceName = sourceMapping[manga.source] ?: manga.source.toString()
-                        errors.add(Date() to "${manga.title} [$sourceName]: ${e.message}")
-                    },
-                )
+            // The library can already hold entries from an earlier import of the same archive,
+            // whose stored url is the malformed one a previous build wrote. They are indexed by the
+            // path their source builds requests from, so this import repairs them in place instead
+            // of adding a duplicate entry.
+            val existingBySource = runCatching { getManga.awaitFavorites() }
+                .getOrDefault(emptyList())
+                .groupBy { it.source }
+                .mapValues { (_, mangas) ->
+                    mangas.mapNotNull { manga ->
+                        mangaUrlPath(manga.url).takeIf { it.isNotEmpty() }?.let { path -> path to manga }
+                    }.toMap()
+                }
+
+            // Restore individual manga a batch at a time: a database round trip per entry, one
+            // after the other, made a large archive take a very long time to import.
+            backup.backupManga.chunked(RESTORE_BATCH_SIZE).forEach { batch ->
+                coroutineScope {
+                    batch.map { backupManga ->
+                        async {
+                            ensureActive()
+                            mangaBackupRestorer.restoreManga(
+                                backupManga,
+                                backup.backupCategories,
+                                existing = existingBySource[backupManga.source].orEmpty(),
+                                onComplete = { manga ->
+                                    manga.id?.let { importedMangaIds.add(it) }
+                                    showRestoreProgress(advanceProgress(), restoreAmount, manga.title)
+                                },
+                                onError = { manga, e ->
+                                    val sourceName = sourceMapping[manga.source] ?: manga.source.toString()
+                                    errors.add(Date() to "${manga.title} [$sourceName]: ${e.message}")
+                                },
+                            )
+                        }
+                    }.awaitAll()
+                }
             }
         }
 
@@ -104,7 +136,14 @@ class BackupRestorer(
             // A converted archive holds no chapters and no descriptions, so fetch them from the
             // sources now instead of leaving every entry empty until it is opened. Only the entries
             // this restore wrote are updated, not the whole library.
-            LibraryUpdateJob.startNow(context, mangaIds = importedMangaIds.distinct())
+            LibraryUpdateJob.startNow(
+                context,
+                mangaIds = importedMangaIds.toList().distinct(),
+                // The archive has no descriptions or covers either, so this pass fetches details
+                // as well as chapters and reports what it could not fetch.
+                fetchDetails = true,
+                fromImport = true,
+            )
         }
         // TODO: optionally trigger online library + tracker update
     }
@@ -123,6 +162,10 @@ class BackupRestorer(
     ) {
         notifier.showRestoreProgress(title, progress, amount)
     }
+
+    /** Progress is advanced by the parallel batch workers. */
+    @Synchronized
+    private fun advanceProgress(): Int = ++restoreProgress
 
     internal fun writeErrorLog(): File {
         try {

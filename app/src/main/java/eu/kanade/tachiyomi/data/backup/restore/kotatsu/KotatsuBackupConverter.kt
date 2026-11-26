@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.util.manga.mangaUrlPath
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 import kotlinx.serialization.decodeFromString
@@ -55,6 +56,14 @@ class KotatsuBackupConverter(
 
             sources.getOrPut(candidate.id) { BackupSource(name = candidate.name, sourceId = candidate.id) }
 
+            val url = sourceUrl(candidate, manga)
+            if (url == null) {
+                // Without a usable url nothing can be requested from the source, and storing the
+                // title as a path would only produce an entry that can never be opened.
+                unmatched.add("${manga.title} (${manga.source.ifBlank { "unknown source" }}: no usable url)")
+                return@forEach
+            }
+
             val chapters = index[manga.id]?.chapters.orEmpty()
             val historyEntry = history[manga.id]
             val lastRead = chapters.firstOrNull { it.id == historyEntry?.chapterId }
@@ -63,7 +72,7 @@ class KotatsuBackupConverter(
             mangas.add(
                 BackupManga(
                     source = candidate.id,
-                    url = sourceUrl(candidate, manga),
+                    url = url,
                     title = manga.title.ifBlank { manga.url },
                     author = manga.author?.takeIf { it.isNotBlank() },
                     genre = manga.tagTitles,
@@ -118,34 +127,23 @@ class KotatsuBackupConverter(
      * url is reduced to its path and a path always gets a single leading slash. Without this the
      * details and chapter requests go to a malformed url.
      */
-    private fun sourceUrl(candidate: KotatsuSourceResolver.Candidate, manga: KotatsuManga): String {
+    private fun sourceUrl(candidate: KotatsuSourceResolver.Candidate, manga: KotatsuManga): String? {
         return sequenceOf(manga.url, manga.publicUrl)
             .map { sourcePath(it, candidate.baseUrl) }
             .firstOrNull { it.isNotEmpty() }
-            ?: manga.title
     }
 
     private fun sourcePath(raw: String, baseUrl: String?): String {
-        val cleaned = raw.trim().substringBefore('#').substringBefore('?')
-        if (cleaned.isEmpty()) return ""
+        val path = mangaUrlPath(raw)
+        if (path.isEmpty()) return ""
 
-        val path = if (cleaned.contains("://")) pathOf(cleaned) else cleaned
-        if (path.isBlank() || path == "/") return ""
-
-        var result = "/" + path.trim('/')
         // A source whose base url has a path expects the manga url to be relative to it.
-        val basePath = pathOf(baseUrl.orEmpty()).trimEnd('/')
-        if (basePath.isNotEmpty() && (result == basePath || result.startsWith("$basePath/"))) {
-            result = result.removePrefix(basePath)
+        val basePath = mangaUrlPath(baseUrl.orEmpty()).trimEnd('/')
+        return if (basePath.isNotEmpty() && (path == basePath || path.startsWith("$basePath/"))) {
+            path.removePrefix(basePath)
+        } else {
+            path
         }
-        return if (result == "/") "" else result
-    }
-
-    /** The path of a url, or an empty string when it has none. */
-    private fun pathOf(url: String): String {
-        val withoutScheme = url.substringAfter("://", url)
-        val start = withoutScheme.indexOf('/')
-        return if (start < 0) "" else withoutScheme.substring(start)
     }
 
     /** Reads the sections the import needs and leaves the rest (settings, covers, ...) in the zip. */
