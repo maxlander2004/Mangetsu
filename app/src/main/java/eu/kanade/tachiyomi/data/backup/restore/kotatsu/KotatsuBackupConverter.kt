@@ -22,6 +22,9 @@ import uy.kohesive.injekt.api.get
  *
  * Entries whose source has no equivalent here are not imported; they are reported through
  * [Backup.unmatchedEntries] so the restore dialog can list them before anything is written.
+ *
+ * A Kotatsu archive holds no chapter lists and no descriptions, so the imported entries need a
+ * fetch from their source; that is flagged with [Backup.requiresSourceRefresh].
  */
 class KotatsuBackupConverter(
     private val resolver: KotatsuSourceResolver,
@@ -60,7 +63,7 @@ class KotatsuBackupConverter(
             mangas.add(
                 BackupManga(
                     source = candidate.id,
-                    url = manga.url.ifBlank { manga.publicUrl.ifBlank { manga.title } },
+                    url = sourceUrl(candidate, manga),
                     title = manga.title.ifBlank { manga.url },
                     author = manga.author?.takeIf { it.isNotBlank() },
                     genre = manga.tagTitles,
@@ -103,7 +106,46 @@ class KotatsuBackupConverter(
                 BackupCategory(name = category.title.ifBlank { "Category $position" }, order = position)
             },
             backupSources = sources.values.toList(),
-        ).also { it.unmatchedEntries = unmatched }
+        ).also {
+            it.unmatchedEntries = unmatched
+            it.requiresSourceRefresh = true
+        }
+    }
+
+    /**
+     * The url the matched source expects. Sources here build their requests as
+     * `baseUrl + manga.url`, while Kotatsu stores either such a path or a whole url, so an absolute
+     * url is reduced to its path and a path always gets a single leading slash. Without this the
+     * details and chapter requests go to a malformed url.
+     */
+    private fun sourceUrl(candidate: KotatsuSourceResolver.Candidate, manga: KotatsuManga): String {
+        return sequenceOf(manga.url, manga.publicUrl)
+            .map { sourcePath(it, candidate.baseUrl) }
+            .firstOrNull { it.isNotEmpty() }
+            ?: manga.title
+    }
+
+    private fun sourcePath(raw: String, baseUrl: String?): String {
+        val cleaned = raw.trim().substringBefore('#').substringBefore('?')
+        if (cleaned.isEmpty()) return ""
+
+        val path = if (cleaned.contains("://")) pathOf(cleaned) else cleaned
+        if (path.isBlank() || path == "/") return ""
+
+        var result = "/" + path.trim('/')
+        // A source whose base url has a path expects the manga url to be relative to it.
+        val basePath = pathOf(baseUrl.orEmpty()).trimEnd('/')
+        if (basePath.isNotEmpty() && (result == basePath || result.startsWith("$basePath/"))) {
+            result = result.removePrefix(basePath)
+        }
+        return if (result == "/") "" else result
+    }
+
+    /** The path of a url, or an empty string when it has none. */
+    private fun pathOf(url: String): String {
+        val withoutScheme = url.substringAfter("://", url)
+        val start = withoutScheme.indexOf('/')
+        return if (start < 0) "" else withoutScheme.substring(start)
     }
 
     /** Reads the sections the import needs and leaves the rest (settings, covers, ...) in the zip. */

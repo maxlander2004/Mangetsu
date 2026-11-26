@@ -24,6 +24,13 @@ data class Backup(
     @Transient
     var unmatchedEntries: List<String> = emptyList()
 
+    /**
+     * Set by a converted backup whose entries carry no chapters or details, so the library has to be
+     * fetched from the sources once the restore is done.
+     */
+    @Transient
+    var requiresSourceRefresh: Boolean = false
+
     companion object {
         val filenameRegex = """(${BuildConfig.APPLICATION_ID}|tachiyomi)?_\d+-\d+-\d+_\d+-\d+\.(tachibk|proto\.gz)""".toRegex()
 

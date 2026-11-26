@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesBackupRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaBackupRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceBackupRestorer
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.util.BackupUtil
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.coroutineScope
@@ -94,6 +95,12 @@ class BackupRestorer(
                     },
                 )
             }
+        }
+
+        if (backup.requiresSourceRefresh) {
+            // A converted archive holds no chapters and no descriptions, so fetch them from the
+            // sources now instead of leaving every entry empty until it is opened.
+            LibraryUpdateJob.startNow(context)
         }
         // TODO: optionally trigger online library + tracker update
     }
