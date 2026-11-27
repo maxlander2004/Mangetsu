@@ -13,9 +13,11 @@ import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import yokai.data.backup.importer.BackupImporter
 import yokai.domain.manga.interactor.GetManga
 import yokai.i18n.MR
 import yokai.util.lang.getString
@@ -33,6 +35,7 @@ class BackupRestorer(
     private val mangaBackupRestorer: MangaBackupRestorer = MangaBackupRestorer(),
     private val preferenceBackupRestorer: PreferenceBackupRestorer = PreferenceBackupRestorer(context),
     private val getManga: GetManga = Injekt.get(),
+    private val backupImporter: BackupImporter = Injekt.get(),
 ) {
     private var restoreAmount = 0
 
@@ -130,6 +133,16 @@ class BackupRestorer(
                     }.awaitAll()
                 }
             }
+        }
+
+        // Bridge Kotatsu read history into the local library. The converter now writes the page
+        // number into BackupHistory.readDuration, and this import turns each history entry either
+        // into a real chapter+history update (when the chapter is already present) or into a
+        // pending item (when the chapter has not been synced yet). That is what lets a user restore
+        // a Kotatsu backup and open the reader right where they stopped in the old app.
+        if (backup.requiresSourceRefresh) {
+            currentCoroutineContext().ensureActive()
+            backupImporter.importFrom(backup)
         }
 
         if (backup.requiresSourceRefresh && importedMangaIds.isNotEmpty()) {

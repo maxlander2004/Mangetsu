@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import yokai.i18n.MR
+import yokai.source.kotatsu.KotatsuSources
 import yokai.util.lang.getString
 
 class SourceManager(
@@ -31,6 +32,9 @@ class SourceManager(
     private val scope = CoroutineScope(Job() + Dispatchers.IO)
 
     private val sourcesMapFlow = MutableStateFlow(ConcurrentHashMap<Long, Source>())
+
+    /** Kotatsu-Redo parsers, offered next to whatever extensions are installed. */
+    private val kotatsuSources: List<CatalogueSource> by lazy { KotatsuSources.create() }
 
     private val stubSourcesMap = ConcurrentHashMap<Long, StubSource>()
 
@@ -45,6 +49,9 @@ class SourceManager(
             extensionManager.installedExtensionsFlow
                 .collectLatest { extensions ->
                     val mutableMap = ConcurrentHashMap<Long, Source>(mapOf(LocalSource.ID to LocalSource(context)))
+                    kotatsuSources.forEach { source ->
+                        mutableMap[source.id] = source
+                    }
                     extensions.forEach { extension ->
                         extension.sources.forEach {
                             mutableMap[it.id] = it

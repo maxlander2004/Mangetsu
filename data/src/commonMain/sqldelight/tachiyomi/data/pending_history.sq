@@ -1,0 +1,32 @@
+CREATE TABLE pending_history(
+    pending_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    manga_key TEXT NOT NULL,
+    chapter_url TEXT,
+    chapter_number REAL,
+    last_read_at INTEGER NOT NULL,
+    page_or_progress INTEGER NOT NULL DEFAULT 0,
+    completed_chapter INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(manga_key, chapter_url, chapter_number)
+);
+
+DELETE_PENDING_FOR_MANGA:
+DELETE FROM pending_history
+WHERE manga_key = :mangaKey;
+
+INSERT_PENDING:
+INSERT OR IGNORE INTO pending_history(
+    manga_key, chapter_url, chapter_number, last_read_at, page_or_progress, completed_chapter
+)
+VALUES(
+    :mangaKey, :chapterUrl, :chapterNumber, :lastReadAt, :pageOrProgress, :completedChapter
+);
+
+SELECT_PENDING_BY_MANGA_KEY:
+SELECT *
+FROM pending_history
+WHERE manga_key = :mangaKey;
+
+SELECT_PENDING_BY_MANGA_KEYS:
+SELECT *
+FROM pending_history
+WHERE manga_key IN (:mangaKeys);

@@ -100,6 +100,7 @@ class KotatsuBackupConverter(
                             BackupHistory(
                                 url = lastRead.url.ifBlank { lastRead.id.toString() },
                                 lastRead = historyEntry.updatedAt * 1000L,
+                                readDuration = historyEntry.page.toLong(),
                             ),
                         )
                     } else {

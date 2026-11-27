@@ -57,6 +57,7 @@ The project exists to keep the things that matter to the owner: a clean reader, 
 <details>
 <summary><h3>What is new in Mangetsu</h3></summary>
 
+- Kotatsu-Redo's whole manga catalogue, built in: every Kotatsu parser is offered as a normal source, so it is browsed, searched and read through Mangetsu's own screens instead of a second app.
 - The launcher icon is built from the repository — the same torii-and-full-moon art is what you install and what you see on the repo.
 - Many reading directions, with each manga keeping its own layout.
 - A single library list view with categories you can expand.

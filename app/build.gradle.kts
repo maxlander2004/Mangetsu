@@ -154,6 +154,10 @@ dependencies {
     implementation(projects.presentation.core)
     implementation(projects.source.api)
 
+    // Kotatsu-Redo's parsers. Each one is wrapped as a normal source (see yokai.source.kotatsu),
+    // so the Kotatsu catalogue is browsed and read through the same UI as everything else.
+    implementation("com.github.clquwu:kotatsu-parsers-redo:3432a85ac0")
+
     // Compose
     implementation(platform(compose.bom))
     implementation(compose.bundles.compose)

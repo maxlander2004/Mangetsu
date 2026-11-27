@@ -23,16 +23,7 @@ import yokai.domain.chapter.interactor.GetChapter
 import yokai.domain.chapter.interactor.InsertChapter
 import yokai.domain.chapter.interactor.UpdateChapter
 import yokai.domain.extension.interactor.TrustExtension
-import yokai.domain.extension.repo.ExtensionRepoRepository
-import yokai.domain.extension.repo.interactor.CreateExtensionRepo
-import yokai.domain.extension.repo.interactor.DeleteExtensionRepo
-import yokai.domain.extension.repo.interactor.GetExtensionRepo
-import yokai.domain.extension.repo.interactor.GetExtensionRepoCount
-import yokai.domain.extension.repo.interactor.ReplaceExtensionRepo
-import yokai.domain.extension.repo.interactor.UpdateExtensionRepo
-import yokai.domain.history.HistoryRepository
-import yokai.domain.history.interactor.GetHistory
-import yokai.domain.history.interactor.UpsertHistory
+import yokai.data.Database
 import yokai.domain.library.custom.CustomMangaRepository
 import yokai.domain.library.custom.interactor.CreateCustomManga
 import yokai.domain.library.custom.interactor.DeleteCustomManga
@@ -47,6 +38,20 @@ import yokai.domain.manga.interactor.InsertManga
 import yokai.domain.manga.interactor.UpdateManga
 import yokai.domain.manga.interactor.SetExcludedScanlators
 import yokai.domain.recents.interactor.GetRecents
+import yokai.domain.extension.repo.ExtensionRepoRepository
+import yokai.domain.extension.repo.interactor.CreateExtensionRepo
+import yokai.domain.extension.repo.interactor.DeleteExtensionRepo
+import yokai.domain.extension.repo.interactor.GetExtensionRepo
+import yokai.domain.extension.repo.interactor.GetExtensionRepoCount
+import yokai.domain.extension.repo.interactor.ReplaceExtensionRepo
+import yokai.domain.extension.repo.interactor.UpdateExtensionRepo
+import yokai.domain.history.HistoryRepository
+import yokai.domain.history.interactor.GetHistory
+import yokai.domain.history.interactor.PendingHistoryRepository
+import yokai.domain.history.interactor.PendingHistoryRepositoryImpl
+import yokai.domain.history.interactor.ReconcilePendingHistory
+import yokai.domain.history.interactor.UpsertHistory
+import yokai.data.backup.importer.BackupImporter
 import yokai.domain.source.browse.filter.FilterSerializer
 import yokai.domain.source.browse.filter.SavedSearchRepository
 import yokai.domain.source.browse.filter.interactor.DeleteSavedSearch
@@ -103,7 +108,20 @@ fun domainModule() = module {
     factory { GetHistory(get()) }
     factory { UpsertHistory(get()) }
 
+    single<PendingHistoryRepository> { PendingHistoryRepositoryImpl(get()) }
+    factory {
+        ReconcilePendingHistory(
+            get<ChapterRepository>(),
+            get(),
+            get(),
+            get(),
+            get(),
+        )
+    }
+
     factory { GetRecents(get(), get()) }
+
+    single { BackupImporter(get()) }
 
     single<TrackRepository> { TrackRepositoryImpl(get()) }
     factory { DeleteTrack(get()) }
