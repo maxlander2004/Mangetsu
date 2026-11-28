@@ -8,6 +8,21 @@ The format is simplified version of [Keep a Changelog](https://keepachangelog.co
 - `Fixes` - Bugfixes
 - `Other` - Technical changes/updates
 
+## [1.10.7]
+
+### Fixes
+- Starting the app from a manga shortcut, a deep link or a notification no longer crashes with `lateinit property manga has not been initialized`: the details screen reads the manga from the database before it loads chapters, and closes itself when the manga is gone instead of failing.
+
+## [1.10.6]
+
+### Fixes
+- Open chapters of an imported Kotatsu entry: the bundled Kotatsu sources are now `HttpSource`s, so the reader gives them a page loader, and their page urls are made absolute before they are requested.
+- Restore a Kotatsu backup again: the restore worker asked the dependency graph for a `Context` that is only registered as an `Application`.
+- Keep imported dates correct: a Kotatsu timestamp in seconds is scaled to milliseconds, and one already in milliseconds is left alone instead of landing in the year 54522.
+
+### Other
+- Remove a duplicate copy of `ChapterUpdate` in the app module that made every minified (nightly/release) build fail in R8.
+
 ## [Unreleased]
 
 ### Other

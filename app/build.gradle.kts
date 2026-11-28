@@ -27,7 +27,7 @@ fun runCommand(command: String): String {
 }
 
 @Suppress("PropertyName")
-val _versionName = "1.10.3"
+val _versionName = "1.10.7"
 val betaCount by lazy {
     val betaTags = runCommand("git tag -l --sort=refname v${_versionName}-b*")
 
@@ -50,7 +50,7 @@ val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 android {
     defaultConfig {
         applicationId = "eu.kanade.tachiyomi"
-        versionCode = 162
+        versionCode = 166
         versionName = _versionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
@@ -153,6 +153,10 @@ dependencies {
     implementation(projects.i18n)
     implementation(projects.presentation.core)
     implementation(projects.source.api)
+
+    // Kotatsu-Redo's parsers. Each one is wrapped as a normal source (see yokai.source.kotatsu),
+    // so the Kotatsu catalogue is browsed and read through the same UI as everything else.
+    implementation("com.github.clquwu:kotatsu-parsers-redo:3432a85ac0")
 
     // Compose
     implementation(platform(compose.bom))

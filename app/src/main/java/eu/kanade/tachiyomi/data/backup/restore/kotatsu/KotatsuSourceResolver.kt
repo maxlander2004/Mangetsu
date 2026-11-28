@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.restore.kotatsu
 
+import co.touchlab.kermit.Logger
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -21,6 +22,9 @@ class KotatsuSourceResolver(
 
     data class Candidate(val id: Long, val name: String, val baseUrl: String?)
 
+    /** A candidate together with how well it matched, so a close call can be diagnosed. */
+    data class Match(val candidate: Candidate, val score: Int)
+
     private val installedIds: Set<Long> = installedSources.mapTo(HashSet()) { it.id }
 
     private val candidates: List<Candidate> =
@@ -30,15 +34,29 @@ class KotatsuSourceResolver(
                 .filterNot { it.id in installedIds }
                 .map { Candidate(it.id, it.name, it.baseUrl) }
 
-    fun resolve(manga: KotatsuManga): Candidate? {
+    fun resolve(manga: KotatsuManga): Candidate? = resolveWithScore(manga)?.candidate
+
+    /** Resolves [manga] and keeps the score, which makes an ambiguous match visible in the log. */
+    fun resolveWithScore(manga: KotatsuManga): Match? {
         val parserKey = keyOf(manga.source)
         val hosts = listOf(manga.url, manga.publicUrl).map(::hostOf).filter { it.isNotEmpty() }
 
-        return candidates
-            .map { it to matchScore(it, parserKey, hosts) }
-            .filter { (_, score) -> score > 0 }
-            .maxWithOrNull(compareBy({ it.second }, { it.first.id in installedIds }))
-            ?.first
+        val matches = candidates
+            .map { Match(it, matchScore(it, parserKey, hosts)) }
+            .filter { it.score > 0 }
+
+        val best = matches.maxWithOrNull(compareBy({ it.score }, { it.candidate.id in installedIds }))
+            ?: return null
+
+        val runnerUp = matches.filter { it !== best }.maxOfOrNull { it.score } ?: 0
+        if (runnerUp > 0 && best.score - runnerUp <= NEAR_TIE_MARGIN) {
+            Logger.d {
+                "Kotatsu match for '${manga.title}' was close: ${best.candidate.name} " +
+                    "(${best.score}) over runner-up ($runnerUp)"
+            }
+        }
+
+        return best
     }
 
     /**
@@ -59,6 +77,11 @@ class KotatsuSourceResolver(
             fuzzy && keyOf(host).contains(parserKey) -> 40
             else -> 0
         }
+    }
+
+    private companion object {
+        /** How close two candidates may score before the choice is logged. */
+        const val NEAR_TIE_MARGIN = 10
     }
 
     /** `MangaDexParser` and `MangaDex` both become `mangadex`. */

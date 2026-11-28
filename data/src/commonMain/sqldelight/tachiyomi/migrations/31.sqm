@@ -1,0 +1,10 @@
+CREATE TABLE pending_history(
+    pending_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    manga_key TEXT NOT NULL,
+    chapter_url TEXT,
+    chapter_number REAL,
+    last_read_at INTEGER NOT NULL,
+    page_or_progress INTEGER NOT NULL DEFAULT 0,
+    completed_chapter INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(manga_key, chapter_url, chapter_number)
+);

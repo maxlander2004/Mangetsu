@@ -154,9 +154,11 @@ jobs:
 
           echo "STAGE=${stage}" >> $GITHUB_OUTPUT
 
+      # Signing and publishing need upstream's signing keys and their nightly repo, so a fork only
+      # builds and tests. Without this the job failed at the signing step on every push.
       - name: Sign APK
         uses: null2264/actions/android-signer@363cb9cf3d66bd9c72ed6860142c6b2c121d7e94
-        if: env.VERSION_TAG != ''
+        if: env.VERSION_TAG != '' && github.repository == 'null2264/yokai'
         with:
           releaseDir: app/build/outputs/apk/standard/${{ steps.version_stage.outputs.STAGE }}
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -166,7 +168,7 @@ jobs:
           summarise: true
 
       - name: Clean up build artifacts
-        if: env.VERSION_TAG != ''
+        if: env.VERSION_TAG != '' && github.repository == 'null2264/yokai'
         run: |
           set -e
 
@@ -193,7 +195,7 @@ jobs:
           echo "APK_X86_64_SHA=$sha" >> $GITHUB_ENV
 
       - name: Create Release
-        if: startsWith(env.VERSION_TAG, 'v')
+        if: startsWith(env.VERSION_TAG, 'v') && github.repository == 'null2264/yokai'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.VERSION_TAG }}
@@ -229,7 +231,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Nightly
-        if: startsWith(env.VERSION_TAG, 'r')
+        if: startsWith(env.VERSION_TAG, 'r') && github.repository == 'null2264/yokai'
         uses: softprops/action-gh-release@v3
         with:
           repository: null2264/yokai-nightly

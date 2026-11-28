@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.util.manga.mangaUrlPath
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 import kotlinx.serialization.decodeFromString
@@ -22,6 +23,9 @@ import uy.kohesive.injekt.api.get
  *
  * Entries whose source has no equivalent here are not imported; they are reported through
  * [Backup.unmatchedEntries] so the restore dialog can list them before anything is written.
+ *
+ * A Kotatsu archive holds no chapter lists and no descriptions, so the imported entries need a
+ * fetch from their source; that is flagged with [Backup.requiresSourceRefresh].
  */
 class KotatsuBackupConverter(
     private val resolver: KotatsuSourceResolver,
@@ -52,6 +56,14 @@ class KotatsuBackupConverter(
 
             sources.getOrPut(candidate.id) { BackupSource(name = candidate.name, sourceId = candidate.id) }
 
+            val url = sourceUrl(candidate, manga)
+            if (url == null) {
+                // Without a usable url nothing can be requested from the source, and storing the
+                // title as a path would only produce an entry that can never be opened.
+                unmatched.add("${manga.title} (${manga.source.ifBlank { "unknown source" }}: no usable url)")
+                return@forEach
+            }
+
             val chapters = index[manga.id]?.chapters.orEmpty()
             val historyEntry = history[manga.id]
             val lastRead = chapters.firstOrNull { it.id == historyEntry?.chapterId }
@@ -60,13 +72,14 @@ class KotatsuBackupConverter(
             mangas.add(
                 BackupManga(
                     source = candidate.id,
-                    url = manga.url.ifBlank { manga.publicUrl.ifBlank { manga.title } },
+                    url = url,
                     title = manga.title.ifBlank { manga.url },
                     author = manga.author?.takeIf { it.isNotBlank() },
                     genre = manga.tagTitles,
                     status = statusOf(manga.state),
                     thumbnailUrl = (manga.coverUrl ?: manga.largeCoverUrl)?.takeIf { it.isNotBlank() },
-                    dateAdded = (rows.first().createdAt.takeIf { it > 0 } ?: System.currentTimeMillis() / 1000L) * 1000L,
+                    dateAdded = rows.first().createdAt.toEpochMillis().takeIf { it > 0 }
+                        ?: System.currentTimeMillis(),
                     chapters = chapters.mapIndexed { order, chapter ->
                         val url = chapter.url.ifBlank { chapter.id.toString() }
                         val isLastRead = chapter.id == historyEntry?.chapterId
@@ -77,7 +90,7 @@ class KotatsuBackupConverter(
                             // Everything before the last read chapter was read as well.
                             read = isLastRead || (lastReadDate > 0 && chapter.uploadDate > 0 && chapter.uploadDate < lastReadDate),
                             lastPageRead = if (isLastRead) historyEntry?.page ?: 0 else 0,
-                            dateUpload = chapter.uploadDate * 1000L,
+                            dateUpload = chapter.uploadDate.toEpochMillis(),
                             chapterNumber = chapter.number,
                             sourceOrder = order,
                         )
@@ -87,7 +100,8 @@ class KotatsuBackupConverter(
                         listOf(
                             BackupHistory(
                                 url = lastRead.url.ifBlank { lastRead.id.toString() },
-                                lastRead = historyEntry.updatedAt * 1000L,
+                                lastRead = historyEntry.updatedAt.toEpochMillis(),
+                                readDuration = historyEntry.page.toLong(),
                             ),
                         )
                     } else {
@@ -103,7 +117,35 @@ class KotatsuBackupConverter(
                 BackupCategory(name = category.title.ifBlank { "Category $position" }, order = position)
             },
             backupSources = sources.values.toList(),
-        ).also { it.unmatchedEntries = unmatched }
+        ).also {
+            it.unmatchedEntries = unmatched
+            it.requiresSourceRefresh = true
+        }
+    }
+
+    /**
+     * The url the matched source expects. Sources here build their requests as
+     * `baseUrl + manga.url`, while Kotatsu stores either such a path or a whole url, so an absolute
+     * url is reduced to its path and a path always gets a single leading slash. Without this the
+     * details and chapter requests go to a malformed url.
+     */
+    private fun sourceUrl(candidate: KotatsuSourceResolver.Candidate, manga: KotatsuManga): String? {
+        return sequenceOf(manga.url, manga.publicUrl)
+            .map { sourcePath(it, candidate.baseUrl) }
+            .firstOrNull { it.isNotEmpty() }
+    }
+
+    private fun sourcePath(raw: String, baseUrl: String?): String {
+        val path = mangaUrlPath(raw)
+        if (path.isEmpty()) return ""
+
+        // A source whose base url has a path expects the manga url to be relative to it.
+        val basePath = mangaUrlPath(baseUrl.orEmpty()).trimEnd('/')
+        return if (basePath.isNotEmpty() && (path == basePath || path.startsWith("$basePath/"))) {
+            path.removePrefix(basePath)
+        } else {
+            path
+        }
     }
 
     /** Reads the sections the import needs and leaves the rest (settings, covers, ...) in the zip. */
@@ -128,6 +170,17 @@ class KotatsuBackupConverter(
             Logger.e(e) { "Unable to read the Kotatsu '$name' section" }
             emptyList()
         }
+    }
+
+    /**
+     * Kotatsu stores timestamps in milliseconds, but a few older builds stored seconds. Anything
+     * below 1e11 is a second count (as milliseconds it would predate 1973), so it is scaled up.
+     * Without this the library shows dates tens of thousands of years in the future.
+     */
+    private fun Long.toEpochMillis(): Long = when {
+        this <= 0 -> 0L
+        this < 100_000_000_000L -> this * 1000L
+        else -> this
     }
 
     private fun statusOf(state: String?): Int = when (state?.uppercase()) {
