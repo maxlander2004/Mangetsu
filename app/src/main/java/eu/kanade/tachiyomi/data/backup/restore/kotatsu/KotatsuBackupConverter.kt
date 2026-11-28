@@ -78,7 +78,8 @@ class KotatsuBackupConverter(
                     genre = manga.tagTitles,
                     status = statusOf(manga.state),
                     thumbnailUrl = (manga.coverUrl ?: manga.largeCoverUrl)?.takeIf { it.isNotBlank() },
-                    dateAdded = (rows.first().createdAt.takeIf { it > 0 } ?: System.currentTimeMillis() / 1000L) * 1000L,
+                    dateAdded = rows.first().createdAt.toEpochMillis().takeIf { it > 0 }
+                        ?: System.currentTimeMillis(),
                     chapters = chapters.mapIndexed { order, chapter ->
                         val url = chapter.url.ifBlank { chapter.id.toString() }
                         val isLastRead = chapter.id == historyEntry?.chapterId
@@ -89,7 +90,7 @@ class KotatsuBackupConverter(
                             // Everything before the last read chapter was read as well.
                             read = isLastRead || (lastReadDate > 0 && chapter.uploadDate > 0 && chapter.uploadDate < lastReadDate),
                             lastPageRead = if (isLastRead) historyEntry?.page ?: 0 else 0,
-                            dateUpload = chapter.uploadDate * 1000L,
+                            dateUpload = chapter.uploadDate.toEpochMillis(),
                             chapterNumber = chapter.number,
                             sourceOrder = order,
                         )
@@ -99,7 +100,7 @@ class KotatsuBackupConverter(
                         listOf(
                             BackupHistory(
                                 url = lastRead.url.ifBlank { lastRead.id.toString() },
-                                lastRead = historyEntry.updatedAt * 1000L,
+                                lastRead = historyEntry.updatedAt.toEpochMillis(),
                                 readDuration = historyEntry.page.toLong(),
                             ),
                         )
@@ -169,6 +170,17 @@ class KotatsuBackupConverter(
             Logger.e(e) { "Unable to read the Kotatsu '$name' section" }
             emptyList()
         }
+    }
+
+    /**
+     * Kotatsu stores timestamps in milliseconds, but a few older builds stored seconds. Anything
+     * below 1e11 is a second count (as milliseconds it would predate 1973), so it is scaled up.
+     * Without this the library shows dates tens of thousands of years in the future.
+     */
+    private fun Long.toEpochMillis(): Long = when {
+        this <= 0 -> 0L
+        this < 100_000_000_000L -> this * 1000L
+        else -> this
     }
 
     private fun statusOf(state: String?): Int = when (state?.uppercase()) {

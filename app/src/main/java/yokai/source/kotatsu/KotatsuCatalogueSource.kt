@@ -2,6 +2,7 @@ package yokai.source.kotatsu
 
 import android.util.LruCache
 import eu.kanade.tachiyomi.source.CatalogueSource
+import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
@@ -18,6 +19,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilter
 import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.ParserMangaSource
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import okhttp3.Headers
 
 /**
  * A Kotatsu-Redo parser presented as a source, exactly like an installed extension: it shows up in
@@ -27,7 +29,13 @@ import org.koitharu.kotatsu.parsers.model.SortOrder
 class KotatsuCatalogueSource(
     private val parserSource: ParserMangaSource,
     private val loaderContext: MangaLoaderContext,
-) : CatalogueSource {
+) : HttpSource() {
+
+    override val baseUrl: String
+        get() = runCatching { parser.domain.trimEnd('/') }.getOrDefault("")
+
+    override val headers: Headers
+        get() = parser.getRequestHeaders()
 
     private val parser: MangaParser by lazy { loaderContext.newParserInstance(parserSource) }
 
@@ -85,9 +93,18 @@ class KotatsuCatalogueSource(
     override suspend fun getPageList(chapter: SChapter): List<Page> {
         val pages = parser.getPages(chapter.toMangaChapter())
         return pages.mapIndexed { index, page ->
-            val imageUrl = runCatching { parser.getPageUrl(page) }.getOrDefault(page.url)
+            // Parsers may hand back a root-relative or protocol-relative image path; the reader
+            // requests imageUrl as-is, so it has to be absolute before it is handed over.
+            val imageUrl = runCatching { parser.getPageUrl(page) }.getOrDefault(page.url).toAbsoluteUrl()
             Page(index = index, url = page.url, imageUrl = imageUrl)
         }
+    }
+
+    private fun String.toAbsoluteUrl(): String = when {
+        isEmpty() || startsWith("http://") || startsWith("https://") || startsWith("data:") -> this
+        startsWith("//") -> "https:$this"
+        !startsWith("/") -> "$baseUrl/$this"
+        else -> baseUrl + this
     }
 
     private suspend fun fetchList(

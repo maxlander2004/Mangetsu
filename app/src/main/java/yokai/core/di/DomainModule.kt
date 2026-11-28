@@ -1,5 +1,6 @@
 package yokai.core.di
 
+import android.app.Application
 import org.koin.dsl.module
 import yokai.data.category.CategoryRepositoryImpl
 import yokai.data.chapter.ChapterRepositoryImpl
@@ -121,7 +122,9 @@ fun domainModule() = module {
 
     factory { GetRecents(get(), get()) }
 
-    single { BackupImporter(get()) }
+    // DomainModule sees no Context: appModule registers the app as an Application, and the
+    // importer needs a Context, so ask for the type that is actually registered.
+    single { BackupImporter(get<Application>()) }
 
     single<TrackRepository> { TrackRepositoryImpl(get()) }
     factory { DeleteTrack(get()) }
