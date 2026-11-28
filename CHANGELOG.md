@@ -8,6 +8,11 @@ The format is simplified version of [Keep a Changelog](https://keepachangelog.co
 - `Fixes` - Bugfixes
 - `Other` - Technical changes/updates
 
+## [1.10.7]
+
+### Fixes
+- Starting the app from a manga shortcut, a deep link or a notification no longer crashes with `lateinit property manga has not been initialized`: the details screen reads the manga from the database before it loads chapters, and closes itself when the manga is gone instead of failing.
+
 ## [1.10.6]
 
 ### Fixes

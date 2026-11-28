@@ -23,15 +23,15 @@
 
 ## Download
 
-The latest debug APK is on the [releases page](https://github.com/maxlander2004/Mangetsu/releases/tag/debug-1.10.6). It is built on every push to `main` and `master` by CI — the build badge above shows the latest run.
+The latest debug APK is on the [releases page](https://github.com/maxlander2004/Mangetsu/releases/tag/debug-1.10.7). It is built on every push to `main` and `master` by CI — the build badge above shows the latest run.
 
 APKs included (all 5 standard arch variants):
 
-- `Mangetsu-arm64-v8a-v1.10.6.apk` — arm64-v8a
-- `Mangetsu-armeabi-v7a-v1.10.6.apk` — armeabi-v7a
-- `Mangetsu-universal-v1.10.6.apk` — universal (runs on any device)
-- `Mangetsu-x86-v1.10.6.apk` — x86
-- `Mangetsu-x86_64-v1.10.6.apk` — x86_64
+- `Mangetsu-arm64-v8a-v1.10.7.apk` — arm64-v8a
+- `Mangetsu-armeabi-v7a-v1.10.7.apk` — armeabi-v7a
+- `Mangetsu-universal-v1.10.7.apk` — universal (runs on any device)
+- `Mangetsu-x86-v1.10.7.apk` — x86
+- `Mangetsu-x86_64-v1.10.7.apk` — x86_64
 
 This is a **debug** build, not a signed release build. Install it directly on a device.
 

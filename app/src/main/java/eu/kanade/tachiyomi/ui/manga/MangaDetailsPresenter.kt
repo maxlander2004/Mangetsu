@@ -193,10 +193,21 @@ class MangaDetailsPresenter(
         val controller = view ?: return
 
         isLockedFromSearch = controller.shouldLockIfNeeded && SecureActivityDelegate.shouldBeLocked()
-        if (!::manga.isInitialized) runBlocking {
-            setCurrentExcludedScanlators(getExcludedScanlators.await(mangaId))
-            refreshMangaFromDb()
+        if (!::manga.isInitialized) {
+            // A shortcut or a deep link builds the controller from an id alone, so the manga has
+            // to be read from the database before anything else touches it.
+            val dbManga = runBlocking { getManga.awaitById(mangaId) }
+            if (dbManga == null) {
+                // Nothing to show and nothing to fetch: close instead of crashing on every read.
+                controller.activity?.finish()
+                return
+            }
+            setCurrentManga(dbManga)
         }
+        // Only the selection is restored here. Fetching the chapters from onCreate would read
+        // `manga` before it exists and would run before syncData() has built the chapter sort;
+        // onCreateLate() loads them.
+        excludedScanlators = runBlocking { getExcludedScanlators.await(mangaId) }
         syncData()
 
         presenterScope.launchUI {
